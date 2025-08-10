@@ -79,7 +79,7 @@ class DatabaseManager:
         self.db = self.client[database_name]
         self.users = self.db.users
         self.sessions = self.db.sessions
-        self.messages = self.db.messages
+        self.conversations = self.db.conversations  # Unified collection
         
     async def init_database(self):
         """Initialize database with indexes"""
@@ -88,7 +88,8 @@ class DatabaseManager:
             await self.users.create_index("email", unique=True)
             await self.users.create_index("username", unique=True)
             await self.sessions.create_index([("user_id", 1), ("created_at", -1)])
-            await self.messages.create_index([("session_id", 1), ("created_at", 1)])
+            await self.conversations.create_index([("session_id", 1), ("timestamp", 1)])
+            await self.conversations.create_index([("user_id", 1), ("thread_id", 1), ("timestamp", 1)])
             
             print("✅ MongoDB database initialized with indexes")
         except Exception as e:
@@ -256,29 +257,81 @@ class DatabaseManager:
         except:
             return False
     
-    # Message Management
-    async def save_message(self, session_id: str, user_message: str, ai_response: str, metadata: Dict[str, Any]):
-        """Save chat message"""
+    # Conversation Management (Unified)
+    async def save_conversation_messages(self, session_id: str, user_id: str, thread_id: str, 
+                                       user_message: str, ai_response: str, metadata: Dict[str, Any]):
+        """Save conversation messages in unified collection"""
         try:
-            message_doc = {
-                "session_id": ObjectId(session_id),
-                "user_message": user_message,
-                "ai_response": ai_response,
-                "metadata": metadata,
-                "created_at": datetime.now()
-            }
-            await self.messages.insert_one(message_doc)
+            import uuid
+            message_pair_id = str(uuid.uuid4())
+            timestamp = datetime.now()
+            
+            # Handle ObjectId conversion safely
+            try:
+                session_obj_id = ObjectId(session_id) if len(session_id) == 24 else session_id
+                user_obj_id = ObjectId(user_id) if len(user_id) == 24 else user_id
+            except:
+                session_obj_id = session_id
+                user_obj_id = user_id
+            
+            messages = [
+                {
+                    "session_id": session_obj_id,
+                    "thread_id": thread_id,
+                    "user_id": user_obj_id,
+                    "role": "user",
+                    "content": user_message,
+                    "metadata": {},
+                    "timestamp": timestamp,
+                    "message_pair_id": message_pair_id
+                },
+                {
+                    "session_id": session_obj_id,
+                    "thread_id": thread_id,
+                    "user_id": user_obj_id,
+                    "role": "assistant",
+                    "content": ai_response,
+                    "metadata": metadata,
+                    "timestamp": timestamp,
+                    "message_pair_id": message_pair_id
+                }
+            ]
+            
+            await self.conversations.insert_many(messages)
         except Exception as e:
-            print(f"Failed to save message: {e}")
+            print(f"Failed to save conversation messages: {e}")
     
     async def get_session_messages(self, session_id: str, limit: int = 50) -> List[Dict[str, Any]]:
-        """Get messages for a session"""
+        """Get messages for a session (UI format)"""
         try:
-            cursor = self.messages.find(
-                {"session_id": ObjectId(session_id)}
-            ).sort("created_at", 1).limit(limit)
-            return await cursor.to_list(length=None)
-        except:
+            # Handle ObjectId conversion safely
+            try:
+                session_obj_id = ObjectId(session_id) if len(session_id) == 24 else session_id
+            except:
+                session_obj_id = session_id
+                
+            cursor = self.conversations.find(
+                {"session_id": session_obj_id}
+            ).sort("timestamp", 1).limit(limit * 2)  # *2 because we have user+assistant pairs
+            
+            messages = await cursor.to_list(length=None)
+            
+            # Group messages by message_pair_id for UI
+            grouped = {}
+            for msg in messages:
+                pair_id = msg.get("message_pair_id")
+                if pair_id not in grouped:
+                    grouped[pair_id] = {"user_message": "", "ai_response": "", "metadata": {}, "created_at": msg["timestamp"]}
+                
+                if msg["role"] == "user":
+                    grouped[pair_id]["user_message"] = msg["content"]
+                elif msg["role"] == "assistant":
+                    grouped[pair_id]["ai_response"] = msg["content"]
+                    grouped[pair_id]["metadata"] = msg["metadata"]
+            
+            return list(grouped.values())[:limit]
+        except Exception as e:
+            print(f"Error getting session messages: {e}")
             return []
 
 # ===============================
@@ -457,9 +510,11 @@ class DatabaseAwareMultiAgentManager:
             )
             await self.db.update_user_activity(user_id, message_count_delta=1)
             
-            # Save message to database
-            await self.db.save_message(
+            # Save conversation to unified database
+            await self.db.save_conversation_messages(
                 session_id=session_id,
+                user_id=user_id,
+                thread_id=session_id,  # Use session_id as thread_id for consistency
                 user_message=message,
                 ai_response=result["response"],
                 metadata=result["metadata"]

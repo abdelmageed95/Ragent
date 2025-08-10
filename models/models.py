@@ -111,3 +111,15 @@ class SessionResponse(BaseModel):
 class ChatMessage(BaseModel):
     message: str = Field(..., min_length=1, max_length=4000)
     session_id: Optional[str] = None
+
+
+class ConversationMessage(BaseModel):
+    """Unified conversation message for both UI and memory system"""
+    session_id: str
+    thread_id: str  # For memory agent (can be same as session_id)
+    user_id: str
+    role: str = Field(..., pattern="^(user|assistant)$")
+    content: str
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    timestamp: datetime
+    message_pair_id: Optional[str] = None  # Link user-assistant message pairs

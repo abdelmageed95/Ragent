@@ -56,11 +56,11 @@ class MemoryAgent:
             embeddings=self.cfg.embeddings,
         )
 
-        # ----- MongoDB structured facts & history -----
+        # ----- MongoDB structured facts & unified conversations -----
         self.mongo = MongoClient(self.cfg.mongo_uri)
         self.mongo_db = self.mongo[self.cfg.db_name]
         self.facts_col = self.mongo_db["user_facts"]
-        self.messages_col = self.mongo_db["messages_history"]
+        self.conversations_col = self.mongo_db["conversations"]  # Unified collection
 
         # ----- In-memory short-term buffer -----
         self._short_term: List[Dict[str, str]] = []
@@ -79,9 +79,15 @@ class MemoryAgent:
             )
 
     def fetch_short_term(self) -> List[Dict[str,Any]]:
-        # pull the last N messages from Mongo instead of the in‑memory list
-        cursor = self.messages_col.find(
-            {"user_id": self.user_id, "thread_id": self.thread_id}
+        # pull the last N messages from unified conversations collection
+        from bson import ObjectId
+        try:
+            user_obj_id = ObjectId(self.user_id) if len(self.user_id) == 24 else self.user_id
+        except:
+            user_obj_id = self.user_id
+            
+        cursor = self.conversations_col.find(
+            {"user_id": user_obj_id, "thread_id": self.thread_id}
         ).sort("timestamp", -1).limit(self.cfg.short_term_window * 2)
         # reverse so oldest→newest
         return list(cursor)[::-1]
@@ -92,10 +98,16 @@ class MemoryAgent:
         page: int = 0,
         page_size: int = 50
     ) -> List[Dict[str, Any]]:
-        """Return paginated conversation history."""
+        """Return paginated conversation history from unified collection."""
+        from bson import ObjectId
+        try:
+            user_obj_id = ObjectId(self.user_id) if len(self.user_id) == 24 else self.user_id
+        except:
+            user_obj_id = self.user_id
+            
         skip = page * page_size
-        cursor = self.messages_col.find(
-            {"user_id": self.user_id, "thread_id": self.thread_id}
+        cursor = self.conversations_col.find(
+            {"user_id": user_obj_id, "thread_id": self.thread_id}
         ).sort("timestamp", 1).skip(skip).limit(page_size)
         return list(cursor)
 
@@ -130,11 +142,9 @@ class MemoryAgent:
         if excess > 0:
             self._short_term = self._short_term[excess:]
 
-        # 2) Persist messages
-        self.messages_col.insert_many([
-            {"user_id": self.user_id, "thread_id": self.thread_id, "role": "user", "content": user_message, "timestamp": timestamp},
-            {"user_id": self.user_id, "thread_id": self.thread_id, "role": "assistant", "content": assistant_message, "timestamp": timestamp},
-        ])
+        # 2) Messages already persisted by main app - no need to save again
+        # The main application (DatabaseManager) handles persistence to unified collection
+        print(f"📝 Memory: Skipping duplicate message save for {self.user_id}:{self.thread_id}")
 
         # 3) Persist long-term memory
         combined = f"User: {user_message}\nAssistant: {assistant_message}"
@@ -155,6 +165,42 @@ class MemoryAgent:
                 {"$set": {"facts": merged, "last_update": timestamp}},
                 upsert=True,
             )
+            
+    def update_facts_and_embeddings(self, user_message: str, assistant_message: str) -> None:
+        """
+        Update only facts and long-term embeddings without duplicate message persistence.
+        Used when messages are already saved by the main application.
+        """
+        timestamp = datetime.now()
+
+        # 1) Update short-term buffer for context
+        self._short_term.append({"role": "user", "content": user_message})
+        self._short_term.append({"role": "assistant", "content": assistant_message})
+        excess = len(self._short_term) - (self.cfg.short_term_window * 2)
+        if excess > 0:
+            self._short_term = self._short_term[excess:]
+
+        # 2) Update long-term embeddings for semantic search
+        combined = f"User: {user_message}\nAssistant: {assistant_message}"
+        doc = Document(page_content=combined, metadata={
+            "user_id": self.user_id,
+            "thread_id": self.thread_id,
+            "timestamp": timestamp.isoformat(),
+        })
+        self.qdrant_store.add_documents([doc])
+
+        # 3) Update user facts
+        existing = self.get_user_facts()
+        new = self.extract_facts(user_message) or {}
+        merged = {**existing, **new}
+        if merged:
+            self.facts_col.update_one(
+                {"user_id": self.user_id},
+                {"$set": {"facts": merged, "last_update": timestamp}},
+                upsert=True,
+            )
+        
+        print(f"🧠 Memory: Updated facts and embeddings for {self.user_id}:{self.thread_id} (no duplicate messages)")
         
     @staticmethod
     def extract_facts(text: str) -> Dict[str, str]:
@@ -189,5 +235,9 @@ class MockMemoryAgent:
     """Mock memory agent for testing when real memory system isn't available"""
     
     def update(self, user_message: str, agent_response: str):
-        print(f"📝 Enhanced Mock memory: Saved conversation (user: {len(user_message)} chars, agent: {len(agent_response)} chars)")
+        print(f"📝 Mock memory: Saved conversation (user: {len(user_message)} chars, agent: {len(agent_response)} chars)")
+        return True
+        
+    def update_facts_and_embeddings(self, user_message: str, agent_response: str):
+        print(f"🧠 Mock memory: Updated facts and embeddings (user: {len(user_message)} chars, agent: {len(agent_response)} chars)")
         return True

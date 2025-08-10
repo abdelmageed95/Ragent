@@ -177,14 +177,16 @@ async def enhanced_memory_update_node(state: Dict) -> Dict:
     try:
         memory_agent = state["memory_context"].get("memory_agent")
         if memory_agent:
-            memory_agent.update(state["user_message"], state["agent_response"])
+            # Memory update for facts and long-term storage only
+            # Message persistence is handled by main app's unified database
+            memory_agent.update_facts_and_embeddings(state["user_message"], state["agent_response"])
             
-            detail_text = "Conversation saved to memory"
+            detail_text = "Memory context updated (facts and embeddings)"
             await progress_callbacks.notify_progress(
                 session_id, "update", "completed", detail_text
             )
             
-            print("✅ Enhanced Memory updated successfully")
+            print("✅ Enhanced Memory context updated (no duplicate message saving)")
             return {
                 **state,
                 "metadata": {**state.get("metadata", {}), "memory_updated": True}
@@ -220,10 +222,11 @@ def memory_update_node(state: Dict) -> Dict:
     try:
         memory_agent = state["memory_context"].get("memory_agent")
         if memory_agent:
-            # Update memory with the conversation
-            memory_agent.update(state["user_message"], state["agent_response"])
+            # Update memory context (facts and embeddings) only
+            # Message persistence is handled by main app's unified database
+            memory_agent.update_facts_and_embeddings(state["user_message"], state["agent_response"])
             
-            print("✅ Memory updated successfully")
+            print("✅ Memory context updated (no duplicate message saving)")
             return {
                 **state,
                 "metadata": {**state.get("metadata", {}), "memory_updated": True}
