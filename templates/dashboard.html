@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Multi-Agent AI System</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         * {
             margin: 0;
@@ -474,12 +474,12 @@
             </div>
             <div class="header-actions">
                 <button class="btn btn-primary" onclick="showNewSessionModal()">
-                    <i data-lucide="plus"></i>
+                    <i data-lucide="plus">➕</i>
                     New Session
                 </button>
                 <form method="post" action="/logout" style="display: inline;">
                     <button type="submit" class="btn btn-secondary">
-                        <i data-lucide="log-out"></i>
+                        <i data-lucide="log-out">🚪</i>
                         Logout
                     </button>
                 </form>
@@ -500,8 +500,11 @@
                         {% for session in sessions %}
                         <div class="session-card" onclick="openSession('{{ session._id }}')">
                             <div class="session-actions">
+                                <button class="action-btn" onclick="event.stopPropagation(); editSession('{{ session._id }}', '{{ session.name }}', '{{ session.description or '' }}')" title="Edit session">
+                                    <i data-lucide="edit-2" style="width: 16px; height: 16px;">✏️</i>
+                                </button>
                                 <button class="action-btn" onclick="event.stopPropagation(); deleteSession('{{ session._id }}')" title="Delete session">
-                                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                                    <i data-lucide="trash-2" style="width: 16px; height: 16px;">🗑️</i>
                                 </button>
                             </div>
                             <div class="session-header">
@@ -525,7 +528,7 @@
                         {% endfor %}
                     {% else %}
                         <div class="session-card empty" onclick="showNewSessionModal()">
-                            <i data-lucide="plus-circle" style="width: 32px; height: 32px; margin-bottom: 12px;"></i>
+                            <i data-lucide="plus-circle" style="width: 32px; height: 32px; margin-bottom: 12px;">➕</i>
                             <div style="font-size: 16px; font-weight: 500; margin-bottom: 4px;">Create Your First Session</div>
                             <div style="font-size: 14px;">Start a conversation with your AI assistant</div>
                         </div>
@@ -556,23 +559,23 @@
                     <h4 style="margin-bottom: 16px; color: var(--text-primary);">AI Capabilities</h4>
                     <ul class="features-list">
                         <li>
-                            <i data-lucide="brain"></i>
+                            <i data-lucide="brain">🧠</i>
                             Multi-agent workflow
                         </li>
                         <li>
-                            <i data-lucide="search"></i>
+                            <i data-lucide="search">🔍</i>
                             Document retrieval
                         </li>
                         <li>
-                            <i data-lucide="globe"></i>
+                            <i data-lucide="globe">🌐</i>
                             Wikipedia integration
                         </li>
                         <li>
-                            <i data-lucide="database"></i>
+                            <i data-lucide="database">💾</i>
                             Memory context
                         </li>
                         <li>
-                            <i data-lucide="zap"></i>
+                            <i data-lucide="zap">⚡</i>
                             Real-time responses
                         </li>
                     </ul>
@@ -615,8 +618,51 @@
                         Cancel
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        <i data-lucide="message-circle"></i>
+                        <i data-lucide="message-circle">💬</i>
                         Start Session
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Session Modal -->
+    <div class="modal-overlay" id="edit-session-modal">
+        <div class="modal">
+            <h3 class="modal-title">Edit Session</h3>
+            <p class="modal-subtitle">Update your session details</p>
+            
+            <form id="edit-session-form">
+                <input type="hidden" id="edit-session-id">
+                <div class="form-group">
+                    <label class="form-label" for="edit-session-name">Session Name</label>
+                    <input 
+                        type="text" 
+                        id="edit-session-name" 
+                        class="form-input" 
+                        placeholder="e.g., AI Research Discussion, Code Review, Writing Help"
+                        required
+                        maxlength="100"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="edit-session-description">Description (Optional)</label>
+                    <textarea 
+                        id="edit-session-description" 
+                        class="form-input form-textarea" 
+                        placeholder="Describe what you'd like to discuss in this session..."
+                        maxlength="500"
+                    ></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideEditSessionModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="save">💾</i>
+                        Save Changes
                     </button>
                 </div>
             </form>
@@ -628,24 +674,59 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Check if lucide is loaded, if not wait for it
             function initializeLucide() {
-                if (typeof lucide !== 'undefined') {
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    console.log('Initializing Lucide icons...');
                     lucide.createIcons();
+                    console.log('Lucide icons initialized');
                 } else {
+                    console.log('Waiting for Lucide to load...');
                     setTimeout(initializeLucide, 100);
                 }
             }
             initializeLucide();
+            
+            // Also try to re-initialize icons when new content is added
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }, 1000);
         });
 
         // Session Management
         function showNewSessionModal() {
             document.getElementById('session-modal').classList.add('active');
             document.getElementById('session-name').focus();
+            // Re-initialize icons in modal
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }, 50);
         }
 
         function hideSessionModal() {
             document.getElementById('session-modal').classList.remove('active');
             document.getElementById('session-form').reset();
+        }
+
+        function editSession(sessionId, sessionName, sessionDescription) {
+            document.getElementById('edit-session-id').value = sessionId;
+            document.getElementById('edit-session-name').value = sessionName;
+            document.getElementById('edit-session-description').value = sessionDescription;
+            document.getElementById('edit-session-modal').classList.add('active');
+            document.getElementById('edit-session-name').focus();
+            // Re-initialize icons in modal
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }, 50);
+        }
+
+        function hideEditSessionModal() {
+            document.getElementById('edit-session-modal').classList.remove('active');
+            document.getElementById('edit-session-form').reset();
         }
 
         function openSession(sessionId) {
@@ -711,10 +792,54 @@
             }
         });
 
+        // Edit session
+        document.getElementById('edit-session-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const sessionId = document.getElementById('edit-session-id').value;
+            const name = document.getElementById('edit-session-name').value.trim();
+            const description = document.getElementById('edit-session-description').value.trim();
+            
+            if (!name) {
+                alert('Please enter a session name.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/sessions/${sessionId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description || null
+                    })
+                });
+
+                if (response.ok) {
+                    hideEditSessionModal();
+                    // Reload page to refresh session list
+                    window.location.reload();
+                } else {
+                    alert('Failed to update session. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error updating session:', error);
+                alert('Failed to update session. Please try again.');
+            }
+        });
+
         // Close modal on outside click
         document.getElementById('session-modal').addEventListener('click', function(e) {
             if (e.target === this) {
                 hideSessionModal();
+            }
+        });
+
+        document.getElementById('edit-session-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideEditSessionModal();
             }
         });
 
@@ -723,6 +848,7 @@
             // Escape to close modal
             if (e.key === 'Escape') {
                 hideSessionModal();
+                hideEditSessionModal();
             }
             
             // Ctrl/Cmd + N for new session
@@ -732,10 +858,11 @@
             }
         });
 
-        // Auto-refresh session list every 30 seconds
+        // Auto-refresh session list every 2 minutes
         setInterval(() => {
             // Only refresh if no modal is open
-            if (!document.getElementById('session-modal').classList.contains('active')) {
+            if (!document.getElementById('session-modal').classList.contains('active') && 
+                !document.getElementById('edit-session-modal').classList.contains('active')) {
                 window.location.reload();
             }
         }, 60000*2);

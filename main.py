@@ -87,6 +87,10 @@ class SessionCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = Field(None, max_length=500)
 
+class SessionUpdate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+
 class SessionResponse(BaseModel):
     id: str
     name: str
@@ -275,6 +279,21 @@ class DatabaseManager:
         except:
             return False
     
+    async def rename_session(self, session_id: str, user_id: str, new_name: str, new_description: Optional[str] = None) -> bool:
+        """Rename a session"""
+        try:
+            update_data = {"name": new_name}
+            if new_description is not None:
+                update_data["description"] = new_description
+            
+            result = await self.sessions.update_one(
+                {"_id": ObjectId(session_id), "user_id": ObjectId(user_id), "is_active": True},
+                {"$set": update_data}
+            )
+            return result.modified_count > 0
+        except:
+            return False
+    
     # Message Management
     async def save_message(self, session_id: str, user_message: str, ai_response: str, metadata: Dict[str, Any]):
         """Save chat message"""
@@ -328,7 +347,7 @@ def verify_jwt_token(token: str) -> Optional[Dict[str, str]]:
         return None
         
     try:
-        print(f"🔑 Verifying JWT with secret length: {JWT_SECRET}")
+        print(f"🔑 Verifying JWT with secret length: {len(JWT_SECRET)}")
         print(f"🔑 JWT token to verify: {token}")
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         print("✅ JWT token verified successfully")
@@ -388,11 +407,12 @@ async def require_auth(current_user: Optional[Dict] = Depends(get_current_user))
 # ===============================
 
 class DatabaseAwareMultiAgentManager:
-    """Multi-agent manager with database integration"""
+    """Multi-agent manager with database integration and performance optimizations"""
     
     def __init__(self, db: DatabaseManager):
         self.db = db
         self.langgraph_systems: Dict[str, EnhancedLangGraphMultiAgentSystem] = {}
+        self.memory_agents: Dict[str, Any] = {}  # Cache memory agents
         self.active_websockets: Dict[str, WebSocket] = {}
     
     def get_or_create_system(self, user_id: str, session_id: str) -> EnhancedLangGraphMultiAgentSystem:
@@ -420,31 +440,43 @@ class DatabaseAwareMultiAgentManager:
         # Get system for this user session
         system = self.get_or_create_system(user_id, session_id)
         
-        # Create WebSocket callback
+        # Create WebSocket callback for progress and streaming
         async def websocket_callback(*args, **kwargs):
-            # Progress callbacks send (session_id, step, status, details)
-            if len(args) >= 3:
-                session_id_cb, step, status = args[:3]
-                details = args[3] if len(args) > 3 else None
-                
-                # Format as expected by frontend
-                data = {
-                    "type": "workflow_update",
-                    "step": step,
-                    "status": status,
-                    "description": details
-                }
-            else:
-                # Fallback for other callback formats
-                data = args[0] if args else kwargs.get('data', {})
-                
             websocket_key = f"{user_id}:{session_id}"
-            if websocket_key in self.active_websockets:
-                websocket = self.active_websockets[websocket_key]
-                try:
-                    await websocket.send_text(json.dumps(data))
-                except Exception as e:
-                    print(f"WebSocket error for {websocket_key}: {e}")
+            if websocket_key not in self.active_websockets:
+                return
+                
+            websocket = self.active_websockets[websocket_key]
+            
+            try:
+                # Handle different callback types
+                if len(args) >= 3:
+                    session_id_cb, step, status = args[:3]
+                    details = args[3] if len(args) > 3 else None
+                    
+                    # Check if this is a streaming response
+                    if step == "streaming" and status == "partial" and details:
+                        data = {
+                            "type": "partial_response",
+                            "message": details.get("partial_response", ""),
+                            "agent_type": details.get("agent_type", "chatbot"),
+                            "tools_used": details.get("tools_used", [])
+                        }
+                    else:
+                        # Regular workflow update
+                        data = {
+                            "type": "workflow_update", 
+                            "step": step,
+                            "status": status,
+                            "description": details
+                        }
+                else:
+                    # Fallback for other callback formats
+                    data = args[0] if args else kwargs.get('data', {})
+                    
+                await websocket.send_text(json.dumps(data))
+            except Exception as e:
+                print(f"WebSocket error for {websocket_key}: {e}")
         
         # Process with real workflow
         start_time = datetime.now()
@@ -473,8 +505,12 @@ class DatabaseAwareMultiAgentManager:
             
             processing_time = (datetime.now() - start_time).total_seconds() * 1000
             
+            # Extract agent_type from metadata to top level for frontend
+            agent_type = result.get("metadata", {}).get("agent_type", "chatbot")
+            
             return {
                 **result,
+                "agent_type": agent_type,  # Make sure agent_type is at top level
                 "processing_time_ms": processing_time,
                 "timestamp": datetime.now().isoformat(),
                 "session_id": session_id,
@@ -809,6 +845,27 @@ async def delete_session(
     
     return {"message": "Session deleted successfully"}
 
+@app.put("/api/sessions/{session_id}")
+async def rename_session(
+    request: Request,
+    session_id: str,
+    session_data: SessionUpdate,
+    current_user: Dict = Depends(require_auth)
+):
+    """Rename/update session"""
+    db = request.app.state.db
+    success = await db.rename_session(
+        session_id, 
+        str(current_user["_id"]), 
+        session_data.name,
+        session_data.description
+    )
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    return {"message": "Session updated successfully"}
+
 @app.post("/api/chat")
 async def chat_endpoint(
     request: Request,
@@ -845,16 +902,22 @@ async def chat_endpoint(
 @app.websocket("/ws/{session_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
     """WebSocket with authentication"""
+    print(f"🔌 WebSocket connection attempt for session: {session_id}")
     await websocket.accept()
+    print("✅ WebSocket accepted")
     websocket_key = None  # Initialize to prevent unbound variable
     
     try:
         # Get authentication from first message
+        print("🔍 Waiting for auth message...")
         auth_data = await websocket.receive_text()
+        print(f"📨 Received auth data: {auth_data}")
         auth_message = json.loads(auth_data)
+        print(f"📋 Parsed auth message: {auth_message}")
         
         token = auth_message.get("auth_token")
         if not token:
+            print("❌ No auth token in message")
             await websocket.send_text(json.dumps({
                 "type": "error",
                 "message": "Authentication required"
@@ -862,9 +925,13 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             await websocket.close()
             return
         
+        print(f"🔑 Got auth token: {token[:20]}...")
+        
         # Verify token
+        print("🔍 Verifying JWT token...")
         payload = verify_jwt_token(token)
         if not payload:
+            print("❌ JWT token verification failed")
             await websocket.send_text(json.dumps({
                 "type": "error",
                 "message": "Invalid or expired token"
@@ -872,12 +939,16 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             await websocket.close()
             return
         
+        print(f"✅ JWT verified, payload: {payload}")
         user_id = payload["user_id"]
+        print(f"👤 User ID from token: {user_id}")
         
         # Verify session access
+        print(f"🔍 Checking session access for session {session_id}, user {user_id}")
         db = app.state.db
         session = await db.get_session_by_id(session_id, user_id)
         if not session:
+            print(f"❌ Session {session_id} not accessible for user {user_id}")
             await websocket.send_text(json.dumps({
                 "type": "error",
                 "message": "Session not accessible"
@@ -885,17 +956,21 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             await websocket.close()
             return
         
+        print(f"✅ Session verified: {session.get('name', 'Unknown')}")
+        
         # Register WebSocket with unique key to prevent collisions
         websocket_key = f"{user_id}:{session_id}"
         app.state.multi_agent_manager.active_websockets[websocket_key] = websocket
         
         # Send connection confirmation
+        print("✅ Sending connection confirmation...")
         await websocket.send_text(json.dumps({
             "type": "connection_established",
             "session_id": session_id,
             "user_id": user_id,
             "message": "Connected with authentication"
         }))
+        print("✅ WebSocket fully connected and ready")
         
         # Handle messages
         while True:
@@ -912,10 +987,18 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                             user_message, user_id, session_id, chat_mode
                         )
                         
-                        await websocket.send_text(json.dumps({
+                        print(f"🔍 Sending WebSocket response with result keys: {list(result.keys())}")
+                        print(f"🔍 Agent type in result: {result.get('agent_type', 'NOT FOUND')}")
+                        print(f"🔍 Metadata in result: {result.get('metadata', {})}")
+                        
+                        response_data = {
                             "type": "chat_response",
                             **result
-                        }))
+                        }
+                        print(f"🔍 Final response data keys: {list(response_data.keys())}")
+                        print(f"🔍 Final agent_type: {response_data.get('agent_type', 'NOT FOUND')}")
+                        
+                        await websocket.send_text(json.dumps(response_data))
                         
                     except Exception as e:
                         await websocket.send_text(json.dumps({
@@ -930,13 +1013,20 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                 }))
     
     except WebSocketDisconnect:
-        print(f"WebSocket disconnected: {session_id}")
+        print(f"🔌 WebSocket disconnected normally: {session_id}")
     except Exception as e:
-        print(f"WebSocket error: {e}")
+        print(f"❌ WebSocket error: {type(e).__name__}: {e}")
+        print(f"📍 Error occurred at session: {session_id}")
+        import traceback
+        traceback.print_exc()
     finally:
         # Cleanup
+        print(f"🧹 Cleaning up WebSocket for session: {session_id}")
         if websocket_key and websocket_key in app.state.multi_agent_manager.active_websockets:
             del app.state.multi_agent_manager.active_websockets[websocket_key]
+            print(f"✅ WebSocket cleaned up: {websocket_key}")
+        else:
+            print(f"⚠️ No WebSocket key to clean up: {websocket_key}")
 
 # ===============================
 # Health Check

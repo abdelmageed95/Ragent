@@ -68,7 +68,8 @@ class MemoryAgent:
     def _ensure_qdrant_collection(self) -> None:
         """Create the Qdrant collection if it does not exist."""
         if not self.qdrant_client.collection_exists(self.collection_name):
-            dim = len(self.cfg.embeddings.embed_query("test query"))
+            # Use cached dimension instead of embedding a test query
+            dim = 1536  # text-embedding-3-small default dimension
             self.qdrant_client.create_collection(
                 collection_name=self.collection_name,
                 vectors_config=qdrant_models.VectorParams(

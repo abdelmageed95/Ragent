@@ -2,6 +2,20 @@ from typing import Dict
 from rag_agent.ragagent import rag_answer
 from utils.track_progress import progress_callbacks
 
+# Streaming helper function for RAG
+async def send_streaming_response(session_id, partial_response, agent_type="rag_agent", tools_used=[]):
+    """Send a partial response via progress callback for streaming"""
+    try:
+        await progress_callbacks.notify_progress(
+            session_id, "streaming", "partial", {
+                "partial_response": partial_response,
+                "agent_type": agent_type,
+                "tools_used": tools_used
+            }
+        )
+    except Exception as e:
+        print(f"Error sending streaming response: {e}")
+
 # ===============================
 # RAG Agent Node
 # ===============================
@@ -126,19 +140,33 @@ Important: Keep all document-based facts and sources. Just make the response mor
 """
                     
                     try:
-                        enhancement_response = client.chat.completions.create(
+                        # First send the RAG response, then stream the enhancement
+                        await send_streaming_response(session_id, response, "rag_agent", ["rag_retrieval"])
+                        
+                        # Stream the enhancement
+                        enhanced_response = ""
+                        for chunk in client.chat.completions.create(
                             model="gpt-4o-mini",
                             messages=[
                                 {"role": "system", "content": "You are a helpful assistant that enhances RAG responses with conversational context."},
                                 {"role": "user", "content": context_enhancement_prompt}
                             ],
-                            temperature=0.3
-                        )
-                        response = enhancement_response.choices[0].message.content
+                            temperature=0.3,
+                            stream=True
+                        ):
+                            if chunk.choices[0].delta.content:
+                                enhanced_response += chunk.choices[0].delta.content
+                                await send_streaming_response(session_id, enhanced_response, "rag_agent", ["rag_retrieval", "context_enhancement"])
+                        
+                        response = enhanced_response if enhanced_response else response
                         print("✨ RAG response enhanced with conversational context")
                     except Exception as enhancement_error:
                         print(f"⚠️ Context enhancement failed, using original RAG response: {enhancement_error}")
-                        # Use original response if enhancement fails
+                        # Send original RAG response if enhancement fails
+                        await send_streaming_response(session_id, response, "rag_agent", ["rag_retrieval"])
+                else:
+                    # No context enhancement needed, just stream the RAG response
+                    await send_streaming_response(session_id, response, "rag_agent", ["rag_retrieval"])
                 
                 # Update metadata to reflect context usage
                 metadata.update({

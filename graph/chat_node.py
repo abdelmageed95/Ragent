@@ -1,5 +1,6 @@
 
 import os
+import asyncio
 from typing import Dict
 from tools.wikipedia_tool import search_wikipedia, get_wikipedia_page
 from utils.track_progress import progress_callbacks
@@ -11,6 +12,20 @@ from langchain_openai import ChatOpenAI
 # ===============================
 # Create tool list
 wikipedia_tools = [search_wikipedia, get_wikipedia_page]
+
+# Streaming helper function
+async def send_streaming_response(session_id, partial_response, agent_type="chatbot", tools_used=[]):
+    """Send a partial response via progress callback for streaming"""
+    try:
+        await progress_callbacks.notify_progress(
+            session_id, "streaming", "partial", {
+                "partial_response": partial_response,
+                "agent_type": agent_type,
+                "tools_used": tools_used
+            }
+        )
+    except Exception as e:
+        print(f"Error sending streaming response: {e}")
 
 
 def chatbot_agent_node(state: Dict) -> Dict:
@@ -262,11 +277,40 @@ When you use Wikipedia tools:
                 })
             
             messages.extend(tool_messages)
-            final_response = llm.invoke(messages)
-            agent_response = final_response.content
+            
+            # Stream the final response word by word
+            agent_response = ""
+            
+            # Use streaming for final response
+            for chunk in llm.stream(messages):
+                if hasattr(chunk, 'content') and chunk.content:
+                    agent_response += chunk.content
+                    # Send streaming update
+                    await send_streaming_response(
+                        session_id, agent_response, "chatbot", tools_used
+                    )
+            
+            # If no streaming happened, fall back to regular response
+            if not agent_response:
+                final_response = llm.invoke(messages)
+                agent_response = final_response.content
             
         else:
-            agent_response = response.content
+            # No tools needed - stream the response directly
+            agent_response = ""
+            
+            # Use streaming for response
+            for chunk in llm.stream(messages):
+                if hasattr(chunk, 'content') and chunk.content:
+                    agent_response += chunk.content
+                    # Send streaming update
+                    await send_streaming_response(
+                        session_id, agent_response, "chatbot", tools_used
+                    )
+            
+            # If no streaming happened, fall back to regular response
+            if not agent_response:
+                agent_response = response.content
         
         metadata = {
             "agent_type": "chatbot",

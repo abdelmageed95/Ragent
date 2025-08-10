@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ session.name }} - Multi-Agent AI System</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
     <style>
         * {
@@ -384,84 +384,118 @@
         }
 
         /* Markdown Content Styles */
-        .message-content h1, .message-content h2, .message-content h3, 
-        .message-content h4, .message-content h5, .message-content h6 {
+        .markdown-content h1, .markdown-content h2, .markdown-content h3, 
+        .markdown-content h4, .markdown-content h5, .markdown-content h6 {
             margin: 16px 0 8px 0;
             font-weight: 600;
             line-height: 1.2;
         }
 
-        .message-content h1 { font-size: 1.5em; }
-        .message-content h2 { font-size: 1.3em; }
-        .message-content h3 { font-size: 1.1em; }
+        .markdown-content h1 { font-size: 1.5em; }
+        .markdown-content h2 { font-size: 1.3em; }
+        .markdown-content h3 { font-size: 1.1em; }
 
-        .message-content p {
+        .markdown-content p {
             margin: 8px 0;
             line-height: 1.5;
         }
 
-        .message-content ul, .message-content ol {
+        .markdown-content ul, .markdown-content ol {
             margin: 8px 0;
             padding-left: 20px;
         }
 
-        .message-content li {
+        .markdown-content li {
             margin: 4px 0;
+            line-height: 1.4;
         }
 
-        .message-content blockquote {
+        .markdown-content blockquote {
             margin: 12px 0;
-            padding: 8px 16px;
+            padding: 12px 16px;
             border-left: 4px solid var(--primary);
             background: rgba(49, 130, 206, 0.05);
             border-radius: 0 8px 8px 0;
+            font-style: italic;
         }
 
-        .message-content code {
-            background: rgba(0, 0, 0, 0.05);
-            padding: 2px 4px;
+        .markdown-content code {
+            background: rgba(0, 0, 0, 0.08);
+            padding: 3px 6px;
             border-radius: 4px;
             font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             font-size: 0.9em;
+            color: #e53e3e;
         }
 
-        .message-content pre {
+        .markdown-content pre {
             background: rgba(0, 0, 0, 0.05);
-            padding: 12px;
+            padding: 16px;
             border-radius: 8px;
             overflow-x: auto;
-            margin: 12px 0;
+            margin: 16px 0;
+            border: 1px solid var(--border);
         }
 
-        .message-content pre code {
+        .markdown-content pre code {
             background: none;
             padding: 0;
+            color: inherit;
+            font-size: 0.85em;
         }
 
-        .message-content a {
+        .markdown-content a {
             color: var(--primary);
-            text-decoration: none;
-        }
-
-        .message-content a:hover {
             text-decoration: underline;
+            font-weight: 500;
         }
 
-        .message-content table {
+        .markdown-content a:hover {
+            text-decoration: none;
+            background: rgba(49, 130, 206, 0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .markdown-content table {
             width: 100%;
             border-collapse: collapse;
-            margin: 12px 0;
+            margin: 16px 0;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
         }
 
-        .message-content th, .message-content td {
+        .markdown-content th, .markdown-content td {
             border: 1px solid var(--border);
-            padding: 8px;
+            padding: 12px;
             text-align: left;
         }
 
-        .message-content th {
+        .markdown-content th {
             background: var(--secondary);
             font-weight: 600;
+        }
+
+        .markdown-content tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .markdown-content strong {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-content em {
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        .markdown-content hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 2px solid var(--border);
+            border-radius: 1px;
         }
 
         /* Input Area */
@@ -663,6 +697,23 @@
             font-size: 14px;
         }
 
+        /* Streaming response styles */
+        #partial-response {
+            opacity: 0.8;
+        }
+
+        #partial-response .partial-content::after {
+            content: '▋';
+            color: var(--primary);
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
         .thinking-dots {
             display: flex;
             gap: 4px;
@@ -766,7 +817,7 @@
         <header class="header">
             <div class="header-left">
                 <button class="back-btn" onclick="goBack()" title="Back to Dashboard">
-                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
+                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;">←</i>
                     <span style="font-size: 14px; margin-left: 4px;">← Dashboard</span>
                 </button>
                 <div class="session-info">
@@ -784,7 +835,7 @@
                         <span>Connecting...</span>
                     </div>
                     <div class="status-indicator" id="connection-status">
-                        <i data-lucide="wifi-off"></i>
+                        <i data-lucide="wifi-off">📶</i>
                         <span>Disconnected</span>
                     </div>
                 </div>
@@ -831,12 +882,12 @@
                                 <span class="agent-badge">{{ msg.metadata.get('agent_type', 'chatbot') }}</span>
                                 <span>{{ msg.created_at.strftime('%I:%M %p') }}</span>
                             </div>
-                            <p>{{ msg.ai_response }}</p>
+                            <div class="markdown-content">{{ msg.ai_response }}</div>
                             {% if msg.metadata.get('tools_used') %}
                             <div class="tools-used">
                                 {% for tool in msg.metadata.tools_used %}
                                 <span class="tool-badge">
-                                    <i data-lucide="tool"></i>
+                                    <i data-lucide="tool">🔧</i>
                                     {{ tool.replace('_', ' ') }}
                                 </span>
                                 {% endfor %}
@@ -886,7 +937,7 @@
                             aria-describedby="send-button"
                         ></textarea>
                         <button id="send-button" class="send-button" aria-label="Send message" title="Send message">
-                            <i data-lucide="send"></i>
+                            <i data-lucide="send">📤</i>
                         </button>
                     </div>
                 </div>
@@ -899,7 +950,7 @@
             
             <div class="workflow-step" data-step="memory">
                 <div class="step-header">
-                    <i data-lucide="database" class="step-icon"></i>
+                    <i data-lucide="database" class="step-icon">💾</i>
                     <span class="step-title">Memory Fetch</span>
                     <div class="step-status"></div>
                 </div>
@@ -908,7 +959,7 @@
 
             <div class="workflow-step" data-step="supervisor">
                 <div class="step-header">
-                    <i data-lucide="brain" class="step-icon"></i>
+                    <i data-lucide="brain" class="step-icon">🧠</i>
                     <span class="step-title">Supervisor Analysis</span>
                     <div class="step-status"></div>
                 </div>
@@ -917,7 +968,7 @@
 
             <div class="workflow-step" data-step="agent">
                 <div class="step-header">
-                    <i data-lucide="cpu" class="step-icon"></i>
+                    <i data-lucide="cpu" class="step-icon">⚡</i>
                     <span class="step-title">Agent Processing</span>
                     <div class="step-status"></div>
                 </div>
@@ -926,7 +977,7 @@
 
             <div class="workflow-step" data-step="update">
                 <div class="step-header">
-                    <i data-lucide="save" class="step-icon"></i>
+                    <i data-lucide="save" class="step-icon">💾</i>
                     <span class="step-title">Memory Update</span>
                     <div class="step-status"></div>
                 </div>
@@ -957,10 +1008,12 @@
         // Chat management class
         class ChatManager {
             constructor() {
+                console.log('ChatManager constructor called');
                 this.websocket = null;
                 this.isProcessing = false;
-                this.messageCount = {{ session.message_count }};
-                this.toolUsage = {{ session.tools_used }};
+                this.isAuthenticated = false;
+                this.messageCount = parseInt('{{ session.message_count }}') || 0;
+                this.toolUsage = parseInt('{{ session.tools_used }}') || 0;
                 this.reconnectAttempts = 0;
                 this.maxReconnectAttempts = 5;
                 
@@ -977,15 +1030,32 @@
                 this.messageCountEl = document.getElementById('message-count');
                 this.toolUsageEl = document.getElementById('tool-usage');
 
+                console.log('Elements initialized:', {
+                    chatContainer: !!this.chatContainer,
+                    messageInput: !!this.messageInput,
+                    sendButton: !!this.sendButton,
+                    systemStatus: !!this.systemStatus,
+                    connectionStatus: !!this.connectionStatus
+                });
+
                 this.bindEvents();
             }
 
             bindEvents() {
                 // Send message events
-                this.sendButton.addEventListener('click', () => this.sendMessage());
+                if (this.sendButton) {
+                    this.sendButton.addEventListener('click', () => {
+                        console.log('Send button clicked');
+                        this.sendMessage();
+                    });
+                    console.log('Send button event listener added');
+                } else {
+                    console.error('Send button not found!');
+                }
                 this.messageInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
+                        console.log('Enter key pressed');
                         this.sendMessage();
                     }
                 });
@@ -1001,6 +1071,7 @@
                 try {
                     // Get auth token from cookie
                     const authToken = this.getAuthTokenFromCookie();
+                    console.log('Auth token retrieved:', authToken ? `${authToken.substring(0, 20)}...` : 'null');
                     
                     if (!authToken) {
                         console.error('No auth token found');
@@ -1010,20 +1081,23 @@
                     
                     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
                     const wsUrl = `${protocol}//${window.location.host}/ws/${sessionId}`;
+                    console.log('Connecting to WebSocket:', wsUrl);
                     
                     this.websocket = new WebSocket(wsUrl);
                     
                     this.websocket.onopen = () => {
-                        console.log('WebSocket connected');
-                        this.updateConnectionStatus('connected', 'Connected');
-                        this.updateSystemStatus('ready');
+                        console.log('WebSocket connected, sending auth message...');
+                        this.updateConnectionStatus('connecting', 'Authenticating...');
+                        this.updateSystemStatus('connecting');
                         this.reconnectAttempts = 0;
                         
                         // Send authentication
-                        this.websocket.send(JSON.stringify({
-                            type: 'auth',
+                        const authMessage = {
                             auth_token: authToken
-                        }));
+                        };
+                        console.log('Sending auth message:', authMessage);
+                        this.websocket.send(JSON.stringify(authMessage));
+                        console.log('Auth message sent, waiting for confirmation...');
                     };
                     
                     this.websocket.onmessage = (event) => {
@@ -1037,6 +1111,7 @@
                     
                     this.websocket.onclose = (event) => {
                         console.log('WebSocket disconnected:', event.code);
+                        this.isAuthenticated = false;
                         this.updateConnectionStatus('disconnected', 'Disconnected');
                         this.updateSystemStatus('disconnected');
                         
@@ -1046,6 +1121,7 @@
                     
                     this.websocket.onerror = (error) => {
                         console.error('WebSocket error:', error);
+                        this.isAuthenticated = false;
                         this.updateConnectionStatus('disconnected', 'Connection Error');
                     };
                     
@@ -1082,23 +1158,37 @@
                         console.log('Authentication successful');
                         break;
                     
-                    case 'auth_error':
-                        console.error('Authentication failed:', data.message);
+                    case 'error':
+                        console.error('WebSocket error:', data.message);
+                        this.isAuthenticated = false;
                         this.updateSystemStatus('error');
+                        this.updateConnectionStatus('disconnected', 'Error: ' + data.message);
                         break;
                     
                     case 'thinking':
-                        this.showThinkingIndicator(data.message || 'AI is thinking...');
+                        const thinkingMsg = data.message || 'Processing...';
+                        this.showThinkingIndicator(thinkingMsg);
                         this.updateWorkflowStatus(data.step || 'processing', 'active');
                         break;
                     
                     case 'partial_response':
-                        this.updatePartialResponse(data.message, data.agent_type);
+                        this.hideThinkingIndicator();
+                        this.updatePartialResponse(data.message, data.agent_type, data.tools_used);
                         break;
                     
                     case 'response':
                     case 'chat_response':
+                        console.log('Received chat response data:', data);
+                        console.log('Agent type in response:', data.agent_type);
+                        console.log('Tools used in response:', data.tools_used);
                         this.hideThinkingIndicator();
+                        
+                        // Remove partial response if it exists and replace with final
+                        const partialDiv = document.getElementById('partial-response');
+                        if (partialDiv) {
+                            partialDiv.remove();
+                        }
+                        
                         this.addAIMessage(data.response || data.message, data.agent_type, data.tools_used, data.metadata);
                         this.updateWorkflowComplete();
                         this.isProcessing = false;
@@ -1122,7 +1212,9 @@
                     
                     case 'connection_established':
                         console.log('WebSocket connection established:', data.message);
-                        this.updateSystemStatus('connected');
+                        console.log('Authentication successful - ready to send messages');
+                        this.isAuthenticated = true;
+                        this.updateSystemStatus('ready');
                         this.updateConnectionStatus('connected', 'Connected');
                         break;
                     
@@ -1132,7 +1224,12 @@
             }
 
             sendMessage() {
-                if (this.isProcessing || !this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+                if (this.isProcessing || !this.websocket || this.websocket.readyState !== WebSocket.OPEN || !this.isAuthenticated) {
+                    console.log('Cannot send message:', {
+                        isProcessing: this.isProcessing,
+                        websocketReady: this.websocket && this.websocket.readyState === WebSocket.OPEN,
+                        isAuthenticated: this.isAuthenticated
+                    });
                     return;
                 }
 
@@ -1155,6 +1252,10 @@
 
                 // Get selected mode
                 const selectedMode = document.querySelector('input[name="chat-mode"]:checked').value;
+                
+                // Show mode-specific thinking indicator
+                const thinkingMessage = selectedMode === 'rag' ? 'Searching in your docs...' : 'Thinking...';
+                this.showThinkingIndicator(thinkingMessage);
                 
                 // Send to WebSocket
                 this.websocket.send(JSON.stringify({
@@ -1208,7 +1309,7 @@
                         <div class="tools-used">
                             ${toolsUsed.map(tool => `
                                 <span class="tool-badge">
-                                    <i data-lucide="tool"></i>
+                                    <i data-lucide="tool">🔧</i>
                                     ${this.escapeHtml(tool.replace('_', ' '))}
                                 </span>
                             `).join('')}
@@ -1226,7 +1327,7 @@
                             </span>
                             <span>${timeString}</span>
                         </div>
-                        <p>${this.formatMessage(message)}</p>
+                        <div class="markdown-content">${this.formatMessage(message)}</div>
                         ${toolsHtml}
                     </div>
                 `;
@@ -1241,22 +1342,30 @@
             }
 
             getSourceInfo(agentType, toolsUsed) {
-                console.log('getSourceInfo called with:', agentType, toolsUsed); // Debug log
+                console.log('getSourceInfo called with:', {
+                    agentType: agentType,
+                    agentTypeType: typeof agentType,
+                    toolsUsed: toolsUsed,
+                    toolsUsedLength: toolsUsed ? toolsUsed.length : 'null'
+                });
                 
                 // Determine source type based on agent and tools used
                 if (agentType === 'rag_agent' || agentType === 'rag') {
+                    console.log('Returning RAG source info');
                     return {
                         icon: 'database',
                         label: 'My Resources',
                         class: 'source-rag'
                     };
                 } else if (toolsUsed && toolsUsed.length > 0 && (agentType === 'chatbot' || agentType === 'chat')) {
+                    console.log('Returning Tools source info');
                     return {
                         icon: 'tool',
                         label: 'Tools',
                         class: 'source-tools'
                     };
                 } else if (agentType === 'chatbot' || agentType === 'chat') {
+                    console.log('Returning General AI source info');
                     return {
                         icon: 'brain',
                         label: 'General AI',
@@ -1264,6 +1373,7 @@
                     };
                 } else {
                     // Fallback - show the actual agent type for debugging
+                    console.log('Returning fallback source info for:', agentType);
                     return {
                         icon: 'help-circle',
                         label: agentType || 'Unknown',
@@ -1300,7 +1410,7 @@
                 }
             }
 
-            updatePartialResponse(message, agentType) {
+            updatePartialResponse(message, agentType = 'chatbot', toolsUsed = []) {
                 let partialDiv = document.getElementById('partial-response');
                 
                 if (!partialDiv) {
@@ -1311,18 +1421,29 @@
                     const now = new Date();
                     const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                     
+                    // Get proper source info based on agent type
+                    const sourceInfo = this.getSourceInfo(agentType, toolsUsed);
+                    
                     partialDiv.innerHTML = `
                         <div class="message-avatar ai-avatar">AI</div>
                         <div class="message-content">
                             <div class="message-meta">
-                                <span class="agent-badge">${this.escapeHtml(agentType)}</span>
+                                <span class="agent-badge ${sourceInfo.class}">
+                                    <i data-lucide="${sourceInfo.icon}"></i>
+                                    ${sourceInfo.label}
+                                </span>
                                 <span>${timeString}</span>
                             </div>
-                            <p class="partial-content">${this.formatMessage(message)}</p>
+                            <div class="markdown-content partial-content">${this.formatMessage(message)}</div>
                         </div>
                     `;
                     
                     this.chatContainer.appendChild(partialDiv);
+                    
+                    // Initialize Lucide icons
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                    }
                 } else {
                     const contentEl = partialDiv.querySelector('.partial-content');
                     if (contentEl) {
@@ -1420,6 +1541,11 @@
 
             updateConnectionStatus(status, message) {
                 const connectionStatus = this.connectionStatus;
+                if (!connectionStatus) {
+                    console.warn('Connection status element not found');
+                    return;
+                }
+                
                 const icon = connectionStatus.querySelector('i');
                 const text = connectionStatus.querySelector('span');
 
@@ -1428,23 +1554,23 @@
                 
                 switch (status) {
                     case 'connected':
-                        icon.setAttribute('data-lucide', 'wifi');
+                        if (icon) icon.setAttribute('data-lucide', 'wifi');
                         connectionStatus.style.background = 'rgba(16, 185, 129, 0.1)';
                         connectionStatus.style.color = 'var(--success)';
                         connectionStatus.style.borderColor = 'rgba(16, 185, 129, 0.2)';
                         break;
                     case 'connecting':
                         connectionStatus.classList.add('processing');
-                        icon.setAttribute('data-lucide', 'wifi');
+                        if (icon) icon.setAttribute('data-lucide', 'wifi');
                         break;
                     case 'disconnected':
                     default:
                         connectionStatus.classList.add('disconnected');
-                        icon.setAttribute('data-lucide', 'wifi-off');
+                        if (icon) icon.setAttribute('data-lucide', 'wifi-off');
                         break;
                 }
 
-                text.textContent = message;
+                if (text) text.textContent = message;
                 if (typeof lucide !== 'undefined') {
                     lucide.createIcons();
                 }
@@ -1452,6 +1578,11 @@
 
             updateSystemStatus(status) {
                 const systemStatus = this.systemStatus;
+                if (!systemStatus) {
+                    console.warn('System status element not found');
+                    return;
+                }
+                
                 const text = systemStatus.querySelector('span');
 
                 // Reset classes
@@ -1459,25 +1590,29 @@
 
                 switch (status) {
                     case 'ready':
-                        text.textContent = 'System Ready';
+                        if (text) text.textContent = 'System Ready';
                         systemStatus.style.background = 'rgba(16, 185, 129, 0.1)';
                         systemStatus.style.color = 'var(--success)';
                         systemStatus.style.borderColor = 'rgba(16, 185, 129, 0.2)';
                         break;
                     case 'processing':
                         systemStatus.classList.add('processing');
-                        text.textContent = 'Processing...';
+                        if (text) text.textContent = 'Processing...';
                         break;
                     case 'error':
                         systemStatus.classList.add('disconnected');
-                        text.textContent = 'System Error';
+                        if (text) text.textContent = 'System Error';
                         break;
                     case 'disconnected':
                         systemStatus.classList.add('disconnected');
-                        text.textContent = 'Disconnected';
+                        if (text) text.textContent = 'Disconnected';
+                        break;
+                    case 'connecting':
+                        systemStatus.classList.add('processing');
+                        if (text) text.textContent = 'Connecting...';
                         break;
                     default:
-                        text.textContent = 'Connecting...';
+                        if (text) text.textContent = 'Connecting...';
                 }
             }
 
@@ -1557,9 +1692,118 @@
         // Initialize chat manager when DOM is loaded
         let chatManager;
         
+        // Test WebSocket authentication directly
+        function testWebSocketAuth() {
+            console.log('Testing WebSocket auth directly...');
+            const sessionId = '{{ session._id }}';
+            const wsAuthToken = '{{ ws_auth_token }}';
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/${sessionId}`;
+            
+            console.log('Creating direct WebSocket connection to:', wsUrl);
+            const testWs = new WebSocket(wsUrl);
+            
+            testWs.onopen = function() {
+                console.log('Direct WebSocket opened, sending auth...');
+                const authMessage = { auth_token: wsAuthToken };
+                console.log('Sending auth message:', authMessage);
+                testWs.send(JSON.stringify(authMessage));
+            };
+            
+            testWs.onmessage = function(event) {
+                console.log('Direct WebSocket received:', event.data);
+                const data = JSON.parse(event.data);
+                if (data.type === 'connection_established') {
+                    console.log('Direct auth successful!');
+                    testWs.close();
+                }
+            };
+            
+            testWs.onerror = function(error) {
+                console.error('Direct WebSocket error:', error);
+            };
+        }
+
+        // Test function for debugging
+        function testSendButton() {
+            console.log('Testing send button...');
+            const btn = document.getElementById('send-button');
+            const input = document.getElementById('message-input');
+            console.log('Button found:', !!btn);
+            console.log('Input found:', !!input);
+            if (input) {
+                console.log('Input value:', input.value);
+            }
+            if (chatManager) {
+                console.log('ChatManager state:', {
+                    isProcessing: chatManager.isProcessing,
+                    isAuthenticated: chatManager.isAuthenticated,
+                    websocketReady: chatManager.websocket && chatManager.websocket.readyState === WebSocket.OPEN
+                });
+                chatManager.sendMessage();
+            } else {
+                console.log('ChatManager not initialized');
+            }
+        }
+        
+        // Basic test first
+        console.log('JavaScript is loading...');
+        console.log('Session ID:', '{{ session._id }}');
+        console.log('WS Auth Token available:', '{{ ws_auth_token }}'.length > 0);
+        
         document.addEventListener('DOMContentLoaded', function() {
-            chatManager = new ChatManager();
+            console.log('DOM loaded, initializing ChatManager...');
+            
+            // Test if send button exists before ChatManager
+            const testSendButton = document.getElementById('send-button');
+            console.log('Send button exists before ChatManager:', !!testSendButton);
+            
+            // Process existing markdown content
+            try {
+                processExistingMessages();
+                console.log('Markdown processing completed');
+            } catch (e) {
+                console.error('Markdown processing failed:', e);
+            }
+            
+            try {
+                chatManager = new ChatManager();
+                console.log('ChatManager initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize ChatManager:', error);
+                console.error('Error details:', error.stack);
+            }
+            
+            // Fallback button test
+            const fallbackButton = document.getElementById('send-button');
+            if (fallbackButton) {
+                fallbackButton.addEventListener('click', function() {
+                    console.log('FALLBACK: Send button clicked directly!');
+                });
+                console.log('Fallback button listener added');
+            }
         });
+
+        // Function to process existing messages for markdown
+        function processExistingMessages() {
+            const markdownElements = document.querySelectorAll('.markdown-content');
+            markdownElements.forEach(element => {
+                const rawText = element.textContent;
+                if (rawText && typeof marked !== 'undefined') {
+                    try {
+                        marked.setOptions({
+                            sanitize: false,
+                            gfm: true,
+                            breaks: true,
+                            highlight: null
+                        });
+                        element.innerHTML = marked.parse(rawText);
+                    } catch (e) {
+                        console.error('Error processing markdown for existing message:', e);
+                    }
+                }
+            });
+        }
 
         // Utility functions
         function goBack() {
