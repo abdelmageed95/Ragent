@@ -423,8 +423,22 @@ class DatabaseAwareMultiAgentManager:
         
         # Create WebSocket callback
         async def websocket_callback(*args, **kwargs):
-            # Handle different callback signatures - use first arg as data
-            data = args[0] if args else kwargs.get('data', {})
+            # Progress callbacks send (session_id, step, status, details)
+            if len(args) >= 3:
+                session_id_cb, step, status = args[:3]
+                details = args[3] if len(args) > 3 else None
+                
+                # Format as expected by frontend
+                data = {
+                    "type": "workflow_update",
+                    "step": step,
+                    "status": status,
+                    "description": details
+                }
+            else:
+                # Fallback for other callback formats
+                data = args[0] if args else kwargs.get('data', {})
+                
             websocket_key = f"{user_id}:{session_id}"
             if websocket_key in self.active_websockets:
                 websocket = self.active_websockets[websocket_key]

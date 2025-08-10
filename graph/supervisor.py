@@ -1,4 +1,3 @@
-
 from typing import Dict
 from openai import OpenAI
 import os
@@ -73,21 +72,21 @@ async def enhanced_supervisor_node(state: Dict) -> Dict:
     """Enhanced supervisor with progress tracking"""
     session_id = state.get("session_id", "")
     chat_mode = state.get("chat_mode", "general")
-    
+
     await progress_callbacks.notify_progress(
         session_id, "supervisor", "active", "Analyzing request intent and routing to appropriate agent..."
     )
-    
+
     print("🧠 Enhanced Supervisor Node: Making routing decision...")
-    
+
     # Use explicit mode selection if provided
     if chat_mode == "rag":
-        print(f"🎯 Enhanced Supervisor decision: rag_agent (user selected 'My Resources')")
+        print("🎯 Enhanced Supervisor decision: rag_agent (user selected 'My Resources')")
         decision = "rag_agent"
         await progress_callbacks.notify_progress(
-            session_id, "supervisor", "completed", f"Routed to RAG agent (user preference)"
+            session_id, "supervisor", "completed", "Routed to RAG agent (user preference)"
         )
-        
+
         return {
             **state,
             "selected_agent": decision,
@@ -98,16 +97,16 @@ async def enhanced_supervisor_node(state: Dict) -> Dict:
         print("🎯 Enhanced Supervisor decision: chatbot (user selected 'General')")
         decision = "chatbot"
         await progress_callbacks.notify_progress(
-            session_id, "supervisor", "completed", f"Routed to chatbot (user preference)"
+            session_id, "supervisor", "completed", "Routed to chatbot (user preference)"
         )
-        
+
         return {
             **state,
             "selected_agent": decision,
             "supervisor_decision": decision,
             "decision_reason": "User selected 'General' mode"
         }
-    
+
     # Fallback to AI-based routing for backward compatibility
     routing_prompt = f"""
     Analyze this user request and route to the appropriate agent:
@@ -125,7 +124,7 @@ async def enhanced_supervisor_node(state: Dict) -> Dict:
     
     Return ONLY: rag_agent OR chatbot
     """
-    
+
     try:
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
@@ -136,32 +135,32 @@ async def enhanced_supervisor_node(state: Dict) -> Dict:
             temperature=0.1,
             max_tokens=50
         )
-        
+
         agent_choice = response.choices[0].message.content.strip().lower()
-        
+
         if "rag" in agent_choice:
             selected_agent = "rag_agent"
         else:
             selected_agent = "chatbot"
-        
+
         print(f"🎯 Enhanced Supervisor decision: {selected_agent}")
-        
+
         # Prepare detailed message
         agent_names = {
             "rag_agent": "RAG Agent (Document Search)",
             "chatbot": "Chatbot Agent (Conversation & Wikipedia)"
         }
         detail_text = f"Routed to: {agent_names.get(selected_agent, selected_agent)}"
-        
+
         await progress_callbacks.notify_progress(
             session_id, "supervisor", "completed", detail_text
         )
-        
+
         return {
             **state,
             "selected_agent": selected_agent
         }
-        
+
     except Exception as e:
         print(f"❌ Enhanced Supervisor error: {e}")
         await progress_callbacks.notify_progress(

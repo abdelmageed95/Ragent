@@ -794,42 +794,6 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-section">
-                <h3 class="sidebar-title">Active Agents</h3>
-                
-                <div class="agent-card" data-agent="supervisor">
-                    <div class="agent-header">
-                        <i data-lucide="brain" class="agent-icon"></i>
-                        <span class="agent-name">Supervisor</span>
-                    </div>
-                    <p class="agent-description">Routes requests to appropriate agents based on context analysis</p>
-                </div>
-
-                <div class="agent-card" data-agent="chatbot">
-                    <div class="agent-header">
-                        <i data-lucide="message-circle" class="agent-icon"></i>
-                        <span class="agent-name">Chatbot Agent</span>
-                    </div>
-                    <p class="agent-description">Handles conversations with Wikipedia integration</p>
-                </div>
-
-                <div class="agent-card" data-agent="rag">
-                    <div class="agent-header">
-                        <i data-lucide="search" class="agent-icon"></i>
-                        <span class="agent-name">RAG Agent</span>
-                    </div>
-                    <p class="agent-description">Searches documents and knowledge base</p>
-                </div>
-
-                <div class="agent-card" data-agent="memory">
-                    <div class="agent-header">
-                        <i data-lucide="database" class="agent-icon"></i>
-                        <span class="agent-name">Memory System</span>
-                    </div>
-                    <p class="agent-description">Manages context and conversation history</p>
-                </div>
-            </div>
-
-            <div class="sidebar-section">
                 <h3 class="sidebar-title">Session Metrics</h3>
                 <div class="metrics">
                     <div class="metric">
@@ -1450,16 +1414,8 @@
             }
 
             highlightAgent(agentType) {
-                // Remove active state from all agents
-                document.querySelectorAll('.agent-card').forEach(card => {
-                    card.classList.remove('active');
-                });
-
-                // Add active state to current agent
-                const agentCard = document.querySelector(`[data-agent="${agentType}"]`);
-                if (agentCard) {
-                    agentCard.classList.add('active');
-                }
+                // Agent cards removed - no longer needed
+                console.log('Agent activated:', agentType);
             }
 
             updateConnectionStatus(status, message) {
