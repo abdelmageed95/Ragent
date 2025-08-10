@@ -354,18 +354,17 @@ async def get_current_user(
     if not session_token:
         print("❌ No session token found")
         return None
-    
     print("🔍 Verifying JWT token")
     payload = verify_jwt_token(session_token)
     if not payload:
         print("❌ Invalid JWT token")
         return None
-    
+
     user_id = payload.get("user_id")
     if not user_id:
         print("❌ No user_id in JWT payload")
         return None
-    
+
     print(f"🔍 Looking up user: {user_id}")
     db = request.app.state.db
     user = await db.get_user_by_id(user_id)
@@ -375,7 +374,7 @@ async def get_current_user(
         await db.update_user_activity(user_id)
     else:
         print(f"❌ User not found: {user_id}")
-    
+
     return user
 
 async def require_auth(current_user: Optional[Dict] = Depends(get_current_user)) -> Dict[str, Any]:

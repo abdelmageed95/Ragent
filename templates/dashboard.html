@@ -33,12 +33,16 @@
             background: var(--chat-bg);
             min-height: 100vh;
             color: var(--text-primary);
+            overflow: hidden; /* Prevent full page scroll */
         }
 
         .dashboard-container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
 
         .header {
@@ -51,6 +55,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex: 0 0 auto;
         }
 
         .user-info {
@@ -122,9 +127,11 @@
         }
 
         .main-content {
+            flex: 1;
             display: grid;
             grid-template-columns: 1fr 300px;
             gap: 32px;
+            overflow: hidden;
         }
 
         .sessions-section {
@@ -133,6 +140,9 @@
             border-radius: 20px;
             padding: 32px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px); /* Fixed height to allow scrolling */
         }
 
         .section-header {
@@ -140,6 +150,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 24px;
+            flex: 0 0 auto;
         }
 
         .section-title {
@@ -151,6 +162,9 @@
         .sessions-grid {
             display: grid;
             gap: 16px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0; /* Important: allows flex child to shrink */
         }
 
         .session-card {
@@ -255,6 +269,7 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            /* Remove overflow to prevent sidebar scrolling */
         }
 
         .stats-card {
@@ -727,4 +742,3 @@
     </script>
 </body>
 </html>
-```
