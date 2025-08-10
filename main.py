@@ -7,7 +7,7 @@ import os
 import json
 import secrets
 from typing import Dict, Any, List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 from contextlib import asynccontextmanager
 import bcrypt
 import motor.motor_asyncio
@@ -18,9 +18,17 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel, Field, EmailStr
 import uvicorn
 import jwt
+
+from models.models import (
+    UserCreate,
+    UserResponse,
+    SessionCreate,
+    SessionUpdate,
+    SessionResponse,
+    ChatMessage,
+)
 
 # Import the enhanced LangGraph system
 try:
@@ -58,52 +66,6 @@ IS_PRODUCTION = False #os.getenv("ENVIRONMENT", "production").lower() == "produc
 COOKIE_SECURE = IS_PRODUCTION  # Only send cookies over HTTPS in production
 print(f"🔧 Environment: {'production' if IS_PRODUCTION else 'development'}, Cookie secure: {COOKIE_SECURE}")
 
-# ===============================
-# Database Models
-# ===============================
-
-class UserCreate(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50)
-    email: EmailStr
-    password: str = Field(..., min_length=6, max_length=100)
-    full_name: Optional[str] = Field(None, max_length=100)
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-class UserResponse(BaseModel):
-    id: str
-    username: str
-    email: str
-    full_name: Optional[str]
-    created_at: datetime
-    last_active: datetime
-    session_count: int
-    total_messages: int
-    is_active: bool
-
-class SessionCreate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-
-class SessionUpdate(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100)
-    description: Optional[str] = Field(None, max_length=500)
-
-class SessionResponse(BaseModel):
-    id: str
-    name: str
-    description: Optional[str]
-    created_at: datetime
-    last_active: datetime
-    message_count: int
-    tools_used: int
-    is_active: bool
-
-class ChatMessage(BaseModel):
-    message: str = Field(..., min_length=1, max_length=4000)
-    session_id: Optional[str] = None
 
 # ===============================
 # MongoDB Database Manager
