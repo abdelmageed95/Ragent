@@ -989,7 +989,9 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
                         
                         print(f"🔍 Sending WebSocket response with result keys: {list(result.keys())}")
                         print(f"🔍 Agent type in result: {result.get('agent_type', 'NOT FOUND')}")
+                        print(f"🔍 Selected agent in result: {result.get('selected_agent', 'NOT FOUND')}")  
                         print(f"🔍 Metadata in result: {result.get('metadata', {})}")
+                        print(f"🔍 Chat mode used: {chat_mode}")
                         
                         response_data = {
                             "type": "chat_response",

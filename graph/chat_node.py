@@ -281,14 +281,32 @@ When you use Wikipedia tools:
             # Stream the final response word by word
             agent_response = ""
             
-            # Use streaming for final response
+            # Use streaming for final response with optimized chunking
+            chunk_buffer = ""
+            word_count = 0
+            
             for chunk in llm.stream(messages):
                 if hasattr(chunk, 'content') and chunk.content:
                     agent_response += chunk.content
-                    # Send streaming update
-                    await send_streaming_response(
-                        session_id, agent_response, "chatbot", tools_used
-                    )
+                    chunk_buffer += chunk.content
+                    
+                    # Count words to batch updates (send every ~5-10 words)
+                    word_count += len(chunk.content.split())
+                    
+                    # Send update every 8-12 words or if buffer ends with sentence
+                    if (word_count >= 8 or 
+                        chunk.content.strip().endswith(('.', '!', '?', '\n'))):
+                        await send_streaming_response(
+                            session_id, agent_response, "chatbot", tools_used
+                        )
+                        chunk_buffer = ""
+                        word_count = 0
+            
+            # Send final update if there's remaining content
+            if chunk_buffer.strip():
+                await send_streaming_response(
+                    session_id, agent_response, "chatbot", tools_used
+                )
             
             # If no streaming happened, fall back to regular response
             if not agent_response:
@@ -299,14 +317,32 @@ When you use Wikipedia tools:
             # No tools needed - stream the response directly
             agent_response = ""
             
-            # Use streaming for response
+            # Use streaming for response with optimized chunking
+            chunk_buffer = ""
+            word_count = 0
+            
             for chunk in llm.stream(messages):
                 if hasattr(chunk, 'content') and chunk.content:
                     agent_response += chunk.content
-                    # Send streaming update
-                    await send_streaming_response(
-                        session_id, agent_response, "chatbot", tools_used
-                    )
+                    chunk_buffer += chunk.content
+                    
+                    # Count words to batch updates (send every ~5-10 words)
+                    word_count += len(chunk.content.split())
+                    
+                    # Send update every 8-12 words or if buffer ends with sentence
+                    if (word_count >= 8 or 
+                        chunk.content.strip().endswith(('.', '!', '?', '\n'))):
+                        await send_streaming_response(
+                            session_id, agent_response, "chatbot", tools_used
+                        )
+                        chunk_buffer = ""
+                        word_count = 0
+            
+            # Send final update if there's remaining content
+            if chunk_buffer.strip():
+                await send_streaming_response(
+                    session_id, agent_response, "chatbot", tools_used
+                )
             
             # If no streaming happened, fall back to regular response
             if not agent_response:

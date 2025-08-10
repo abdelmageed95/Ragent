@@ -12,48 +12,31 @@ openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def supervisor_node(state: Dict) -> Dict:
     """
-    Supervisor node that decides which agent to route to
+    Fast rule-based supervisor that decides which agent to route to
     """
-    print("🧠 Supervisor Node: Making routing decision...")
-    
-    # Build routing prompt
-    routing_prompt = f"""
-    Analyze this user request and route to the appropriate agent:
-    
-    User message: {state['user_message']}
-    Context: {state['memory_context'].get('context_summary', 'None')}
-    
-    Available agents:
-    1. rag_agent - For document search, retrieving information from uploaded files/images
-    2. chatbot - For general conversation, personal questions, advice, casual chat
-    
-    Consider:
-    - Does the user want to search documents/files? → rag_agent
-    - Is this a general conversation or question? → chatbot
-    
-    Return ONLY: rag_agent OR chatbot
-    """
+    print("🧠 Fast Supervisor: Making routing decision...")
     
     try:
-        response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a routing supervisor. Return only the agent name."},
-                {"role": "user", "content": routing_prompt}
-            ],
-            temperature=0.1,
-            max_tokens=50
-        )
+        user_message = state['user_message'].lower()
+        chat_mode = state.get('chat_mode', 'general')
         
-        agent_choice = response.choices[0].message.content.strip().lower()
+        # Fast rule-based routing
+        rag_keywords = [
+            'search', 'find', 'document', 'file', 'pdf', 'image', 'upload', 
+            'retrieve', 'lookup', 'query', 'database', 'knowledge', 'source',
+            'reference', 'cite', 'extract', 'analyze document'
+        ]
         
-        # Validate choice
-        if "rag" in agent_choice:
+        # Check chat mode first
+        if chat_mode == 'rag' or chat_mode == 'my_resources':
             selected_agent = "rag_agent"
+            print(f"🎯 Routing to RAG (mode: {chat_mode})")
+        elif any(keyword in user_message for keyword in rag_keywords):
+            selected_agent = "rag_agent"  
+            print("🎯 Routing to RAG (keyword match)")
         else:
-            selected_agent = "chatbot"  # Default to chatbot
-        
-        print(f"🎯 Supervisor decision: {selected_agent}")
+            selected_agent = "chatbot"
+            print("🎯 Routing to Chatbot (default)")
         
         return {
             **state,
@@ -69,88 +52,48 @@ def supervisor_node(state: Dict) -> Dict:
 
 
 async def enhanced_supervisor_node(state: Dict) -> Dict:
-    """Enhanced supervisor with progress tracking"""
+    """Enhanced supervisor with fast rule-based routing and progress tracking"""
     session_id = state.get("session_id", "")
     chat_mode = state.get("chat_mode", "general")
 
     await progress_callbacks.notify_progress(
-        session_id, "supervisor", "active", "Analyzing request intent and routing to appropriate agent..."
+        session_id, "supervisor", "active", "Analyzing request and routing..."
     )
 
-    print("🧠 Enhanced Supervisor Node: Making routing decision...")
-
-    # Use explicit mode selection if provided
-    if chat_mode == "rag":
-        print("🎯 Enhanced Supervisor decision: rag_agent (user selected 'My Resources')")
-        decision = "rag_agent"
-        await progress_callbacks.notify_progress(
-            session_id, "supervisor", "completed", "Routed to RAG agent (user preference)"
-        )
-
-        return {
-            **state,
-            "selected_agent": decision,
-            "supervisor_decision": decision,
-            "decision_reason": "User selected 'My Resources' mode"
-        }
-    elif chat_mode == "general":
-        print("🎯 Enhanced Supervisor decision: chatbot (user selected 'General')")
-        decision = "chatbot"
-        await progress_callbacks.notify_progress(
-            session_id, "supervisor", "completed", "Routed to chatbot (user preference)"
-        )
-
-        return {
-            **state,
-            "selected_agent": decision,
-            "supervisor_decision": decision,
-            "decision_reason": "User selected 'General' mode"
-        }
-
-    # Fallback to AI-based routing for backward compatibility
-    routing_prompt = f"""
-    Analyze this user request and route to the appropriate agent:
-    
-    User message: {state['user_message']}
-    Context: {state['memory_context'].get('context_summary', 'None')}
-    
-    Available agents:
-    1. rag_agent - For document search, retrieving information from uploaded files/images
-    2. chatbot - For general conversation, personal questions, advice, casual chat
-    
-    Consider:
-    - Does the user want to search documents/files? → rag_agent
-    - Is this a general conversation or question? → chatbot
-    
-    Return ONLY: rag_agent OR chatbot
-    """
+    print("🧠 Enhanced Fast Supervisor: Making routing decision...")
+    print(f"🔍 Supervisor received chat_mode: {chat_mode}")
+    print(f"🔍 Supervisor received state keys: {list(state.keys())}")
 
     try:
-        response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a routing supervisor. Return only the agent name."},
-                {"role": "user", "content": routing_prompt}
-            ],
-            temperature=0.1,
-            max_tokens=50
-        )
-
-        agent_choice = response.choices[0].message.content.strip().lower()
-
-        if "rag" in agent_choice:
+        user_message = state['user_message'].lower()
+        
+        # Fast rule-based routing (same as above)
+        rag_keywords = [
+            'search', 'find', 'document', 'file', 'pdf', 'image', 'upload', 
+            'retrieve', 'lookup', 'query', 'database', 'knowledge', 'source',
+            'reference', 'cite', 'extract', 'analyze document'
+        ]
+        
+        # Check chat mode first
+        if chat_mode == 'rag' or chat_mode == 'my_resources':
             selected_agent = "rag_agent"
+            reason = f"User mode: {chat_mode}"
+            print(f"🎯 Routing to RAG (mode: {chat_mode})")
+        elif any(keyword in user_message for keyword in rag_keywords):
+            selected_agent = "rag_agent"
+            reason = "Keyword match detected"
+            print("🎯 Routing to RAG (keyword match)")
         else:
             selected_agent = "chatbot"
-
-        print(f"🎯 Enhanced Supervisor decision: {selected_agent}")
+            reason = "General conversation"
+            print("🎯 Routing to Chatbot (default)")
 
         # Prepare detailed message
         agent_names = {
             "rag_agent": "RAG Agent (Document Search)",
             "chatbot": "Chatbot Agent (Conversation & Wikipedia)"
         }
-        detail_text = f"Routed to: {agent_names.get(selected_agent, selected_agent)}"
+        detail_text = f"Routed to: {agent_names.get(selected_agent, selected_agent)} | {reason}"
 
         await progress_callbacks.notify_progress(
             session_id, "supervisor", "completed", detail_text
@@ -158,7 +101,9 @@ async def enhanced_supervisor_node(state: Dict) -> Dict:
 
         return {
             **state,
-            "selected_agent": selected_agent
+            "selected_agent": selected_agent,
+            "supervisor_decision": selected_agent,
+            "decision_reason": reason
         }
 
     except Exception as e:

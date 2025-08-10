@@ -18,9 +18,24 @@ class ProgressCallback:
         if session_id in self.callbacks:
             del self.callbacks[session_id]
     
-    async def notify_progress(self, session_id: str, step: str, status: str, details: str = None):
-        """Notify all callbacks for a session"""
+    async def notify_progress(self, session_id: str, step: str, status: str, details = None):
+        """Notify all callbacks for a session with throttling for streaming"""
         if session_id in self.callbacks:
+            # For streaming updates, throttle to avoid overwhelming the frontend
+            if step == "streaming" and status == "partial":
+                # Use a simple throttling mechanism - only update every ~50ms
+                current_time = asyncio.get_event_loop().time()
+                last_update_key = f"{session_id}_last_stream"
+                
+                if not hasattr(self, '_last_updates'):
+                    self._last_updates = {}
+                    
+                if (last_update_key in self._last_updates and 
+                    current_time - self._last_updates[last_update_key] < 0.05):  # 50ms throttle
+                    return
+                    
+                self._last_updates[last_update_key] = current_time
+            
             for callback in self.callbacks[session_id]:
                 try:
                     if asyncio.iscoroutinefunction(callback):

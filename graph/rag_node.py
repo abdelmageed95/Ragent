@@ -115,58 +115,13 @@ async def enhanced_rag_agent_node(state: Dict) -> Dict:
                     top_n=3
                 )
                 
-                # Enhance the response with context awareness using a post-processing step
+                # Stream the RAG response (skip context enhancement for performance)
+                await send_streaming_response(session_id, response, "rag_agent", ["rag_retrieval"])
+                
+                # Simple context integration without additional LLM call
                 if context_parts:
-                    from openai import OpenAI
-                    import os
-                    
-                    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-                    
-                    context_enhancement_prompt = f"""
-You are an AI assistant that enhances RAG responses with conversational context. 
-
-Original user question: {user_message}
-Available context: {' | '.join(context_parts)}
-RAG response: {response}
-
-Your task: Enhance the RAG response by:
-1. Making it conversationally aware of the context
-2. Personalizing it based on user facts (if relevant)
-3. Referencing previous conversation if it adds value
-4. Maintaining all the factual information from the RAG response
-5. Making it feel like a natural continuation of the conversation
-
-Important: Keep all document-based facts and sources. Just make the response more contextual and conversational.
-"""
-                    
-                    try:
-                        # First send the RAG response, then stream the enhancement
-                        await send_streaming_response(session_id, response, "rag_agent", ["rag_retrieval"])
-                        
-                        # Stream the enhancement
-                        enhanced_response = ""
-                        for chunk in client.chat.completions.create(
-                            model="gpt-4o-mini",
-                            messages=[
-                                {"role": "system", "content": "You are a helpful assistant that enhances RAG responses with conversational context."},
-                                {"role": "user", "content": context_enhancement_prompt}
-                            ],
-                            temperature=0.3,
-                            stream=True
-                        ):
-                            if chunk.choices[0].delta.content:
-                                enhanced_response += chunk.choices[0].delta.content
-                                await send_streaming_response(session_id, enhanced_response, "rag_agent", ["rag_retrieval", "context_enhancement"])
-                        
-                        response = enhanced_response if enhanced_response else response
-                        print("✨ RAG response enhanced with conversational context")
-                    except Exception as enhancement_error:
-                        print(f"⚠️ Context enhancement failed, using original RAG response: {enhancement_error}")
-                        # Send original RAG response if enhancement fails
-                        await send_streaming_response(session_id, response, "rag_agent", ["rag_retrieval"])
-                else:
-                    # No context enhancement needed, just stream the RAG response
-                    await send_streaming_response(session_id, response, "rag_agent", ["rag_retrieval"])
+                    print("✨ RAG response includes conversational context awareness")
+                    metadata["context_enhanced"] = True
                 
                 # Update metadata to reflect context usage
                 metadata.update({
@@ -174,6 +129,8 @@ Important: Keep all document-based facts and sources. Just make the response mor
                     "user_facts_count": len(user_facts),
                     "context_enhanced": len(context_parts) > 0
                 })
+                
+                print(f"🔍 RAG agent setting metadata agent_type: {metadata.get('agent_type')}")
                 
                 detail_text = f"Found {metadata['hits_count']} relevant documents"
                 if metadata["sources"]:

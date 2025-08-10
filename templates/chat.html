@@ -713,6 +713,31 @@
             0%, 50% { opacity: 1; }
             51%, 100% { opacity: 0; }
         }
+        
+        .streaming-cursor {
+            display: inline;
+            color: var(--primary);
+            font-weight: bold;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+            font-size: 1.1em;
+        }
+        
+        .partial-content {
+            min-height: 20px;
+            position: relative;
+        }
+        
+        #partial-response .message-content {
+            background: linear-gradient(90deg, transparent, rgba(49, 130, 206, 0.03), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
 
         .thinking-dots {
             display: flex;
@@ -1180,6 +1205,8 @@
                     case 'chat_response':
                         console.log('Received chat response data:', data);
                         console.log('Agent type in response:', data.agent_type);
+                        console.log('Selected agent in response:', data.selected_agent);
+                        console.log('Metadata in response:', data.metadata);
                         console.log('Tools used in response:', data.tools_used);
                         this.hideThinkingIndicator();
                         
@@ -1434,7 +1461,7 @@
                                 </span>
                                 <span>${timeString}</span>
                             </div>
-                            <div class="markdown-content partial-content">${this.formatMessage(message)}</div>
+                            <div class="markdown-content partial-content" data-raw-message=""></div>
                         </div>
                     `;
                     
@@ -1444,14 +1471,26 @@
                     if (typeof lucide !== 'undefined') {
                         lucide.createIcons();
                     }
-                } else {
-                    const contentEl = partialDiv.querySelector('.partial-content');
-                    if (contentEl) {
-                        contentEl.innerHTML = this.formatMessage(message);
+                } 
+                
+                // Optimized content update - only if message actually changed
+                const contentEl = partialDiv.querySelector('.partial-content');
+                if (contentEl && contentEl.dataset.rawMessage !== message) {
+                    contentEl.dataset.rawMessage = message;
+                    
+                    // Use requestAnimationFrame to batch DOM updates
+                    if (!this.streamingUpdatePending) {
+                        this.streamingUpdatePending = true;
+                        requestAnimationFrame(() => {
+                            // Format the message first, then add cursor
+                            const formattedMessage = this.formatMessage(message);
+                            // Add cursor at the end, outside of any markdown formatting
+                            contentEl.innerHTML = formattedMessage + '<span class="streaming-cursor">|</span>';
+                            this.streamingUpdatePending = false;
+                            this.scrollToBottom();
+                        });
                     }
                 }
-                
-                this.scrollToBottom();
             }
 
             showError(message) {
