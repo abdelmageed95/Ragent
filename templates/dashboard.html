@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Multi-Agent AI System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3182ce;
+            --primary-dark: #2b6cb0;
+            --secondary: #edf2f7;
+            --accent: #38b2ac;
+            --success: #48bb78;
+            --warning: #ecc94b;
+            --error: #f56565;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border: #e2e8f0;
+            --glass: rgba(247, 250, 252, 0.9);
+            --chat-bg: #f7fafc;
+            --sidebar-bg: #edf2f7;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--chat-bg);
+            min-height: 100vh;
+            color: var(--text-primary);
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 24px 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .user-details h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .user-stats {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 32px;
+        }
+
+        .sessions-section {
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .sessions-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .session-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .session-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.1);
+        }
+
+        .session-card.empty {
+            border: 2px dashed var(--border);
+            text-align: center;
+            color: var(--text-secondary);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .session-card.empty:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .session-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .session-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .session-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .session-stats {
+            display: flex;
+            gap: 16px;
+        }
+
+        .session-date {
+            margin-left: auto;
+        }
+
+        .session-actions {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .session-card:hover .session-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: var(--secondary);
+            color: var(--text-primary);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stats-card {
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .stats-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .features-card {
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .features-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .features-list i {
+            width: 18px;
+            height: 18px;
+            color: var(--accent);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .modal-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+            
+            .sessions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(113, 128, 150, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(113, 128, 150, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <div class="user-info">
+                <div class="user-avatar">{{ user.username[0].upper() }}</div>
+                <div class="user-details">
+                    <h2>Welcome back, {{ user.username }}!</h2>
+                    <div class="user-stats">
+                        {{ user.session_count }} sessions • {{ user.total_messages }} messages • 
+                        Member since {{ user.created_at.strftime('%B %Y') }}
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="showNewSessionModal()">
+                    <i data-lucide="plus"></i>
+                    New Session
+                </button>
+                <form method="post" action="/logout" style="display: inline;">
+                    <button type="submit" class="btn btn-secondary">
+                        <i data-lucide="log-out"></i>
+                        Logout
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="sessions-section">
+                <div class="section-header">
+                    <h3 class="section-title">Your AI Sessions</h3>
+                    <span style="color: var(--text-secondary); font-size: 14px;">
+                        {{ sessions|length }} session{{ 's' if sessions|length != 1 else '' }}
+                    </span>
+                </div>
+
+                <div class="sessions-grid">
+                    {% if sessions %}
+                        {% for session in sessions %}
+                        <div class="session-card" onclick="openSession('{{ session._id }}')">
+                            <div class="session-actions">
+                                <button class="action-btn" onclick="event.stopPropagation(); deleteSession('{{ session._id }}')" title="Delete session">
+                                    <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </div>
+                            <div class="session-header">
+                                <div>
+                                    <div class="session-name">{{ session.name }}</div>
+                                    {% if session.description %}
+                                    <div class="session-description">{{ session.description }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="session-meta">
+                                <div class="session-stats">
+                                    <span>{{ session.message_count }} messages</span>
+                                    <span>{{ session.tools_used }} tools used</span>
+                                </div>
+                                <div class="session-date">
+                                    {{ session.last_active.strftime('%m/%d/%Y') }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="session-card empty" onclick="showNewSessionModal()">
+                            <i data-lucide="plus-circle" style="width: 32px; height: 32px; margin-bottom: 12px;"></i>
+                            <div style="font-size: 16px; font-weight: 500; margin-bottom: 4px;">Create Your First Session</div>
+                            <div style="font-size: 14px;">Start a conversation with your AI assistant</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="stats-card">
+                    <h4 style="margin-bottom: 16px; color: var(--text-primary);">Your Stats</h4>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ user.session_count }}</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ user.total_messages }}</div>
+                            <div class="stat-label">Messages</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">{{ ((now() - user.created_at).days) }}</div>
+                            <div class="stat-label">Days Active</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="features-card">
+                    <h4 style="margin-bottom: 16px; color: var(--text-primary);">AI Capabilities</h4>
+                    <ul class="features-list">
+                        <li>
+                            <i data-lucide="brain"></i>
+                            Multi-agent workflow
+                        </li>
+                        <li>
+                            <i data-lucide="search"></i>
+                            Document retrieval
+                        </li>
+                        <li>
+                            <i data-lucide="globe"></i>
+                            Wikipedia integration
+                        </li>
+                        <li>
+                            <i data-lucide="database"></i>
+                            Memory context
+                        </li>
+                        <li>
+                            <i data-lucide="zap"></i>
+                            Real-time responses
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Session Modal -->
+    <div class="modal-overlay" id="session-modal">
+        <div class="modal">
+            <h3 class="modal-title">Create New Session</h3>
+            <p class="modal-subtitle">Start a new conversation with your AI assistant</p>
+            
+            <form id="session-form">
+                <div class="form-group">
+                    <label class="form-label" for="session-name">Session Name</label>
+                    <input 
+                        type="text" 
+                        id="session-name" 
+                        class="form-input" 
+                        placeholder="e.g., AI Research Discussion, Code Review, Writing Help"
+                        required
+                        maxlength="100"
+                    >
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="session-description">Description (Optional)</label>
+                    <textarea 
+                        id="session-description" 
+                        class="form-input form-textarea" 
+                        placeholder="Describe what you'd like to discuss in this session..."
+                        maxlength="500"
+                    ></textarea>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="hideSessionModal()">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-lucide="message-circle"></i>
+                        Start Session
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Wait for DOM and Lucide to load before initializing
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if lucide is loaded, if not wait for it
+            function initializeLucide() {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                } else {
+                    setTimeout(initializeLucide, 100);
+                }
+            }
+            initializeLucide();
+        });
+
+        // Session Management
+        function showNewSessionModal() {
+            document.getElementById('session-modal').classList.add('active');
+            document.getElementById('session-name').focus();
+        }
+
+        function hideSessionModal() {
+            document.getElementById('session-modal').classList.remove('active');
+            document.getElementById('session-form').reset();
+        }
+
+        function openSession(sessionId) {
+            window.location.href = `/chat/${sessionId}`;
+        }
+
+        async function deleteSession(sessionId) {
+            if (!confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/sessions/${sessionId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    // Reload page to refresh session list
+                    window.location.reload();
+                } else {
+                    alert('Failed to delete session. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error deleting session:', error);
+                alert('Failed to delete session. Please try again.');
+            }
+        }
+
+        // Create new session
+        document.getElementById('session-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('session-name').value.trim();
+            const description = document.getElementById('session-description').value.trim();
+            
+            if (!name) {
+                alert('Please enter a session name.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/sessions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        description: description || null
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    // Redirect to new session
+                    window.location.href = `/chat/${result.id}`;
+                } else {
+                    alert('Failed to create session. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error creating session:', error);
+                alert('Failed to create session. Please try again.');
+            }
+        });
+
+        // Close modal on outside click
+        document.getElementById('session-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideSessionModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Escape to close modal
+            if (e.key === 'Escape') {
+                hideSessionModal();
+            }
+            
+            // Ctrl/Cmd + N for new session
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                showNewSessionModal();
+            }
+        });
+
+        // Auto-refresh session list every 30 seconds
+        setInterval(() => {
+            // Only refresh if no modal is open
+            if (!document.getElementById('session-modal').classList.contains('active')) {
+                window.location.reload();
+            }
+        }, 60000*2);
+    </script>
+</body>
+</html>
+```

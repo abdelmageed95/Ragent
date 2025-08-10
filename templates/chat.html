@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ session.name }} - Multi-Agent AI System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3182ce;
+            --primary-dark: #2b6cb0;
+            --secondary: #edf2f7;
+            --accent: #38b2ac;
+            --success: #48bb78;
+            --warning: #ecc94b;
+            --error: #f56565;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border: #e2e8f0;
+            --glass: rgba(247, 250, 252, 0.9);
+            --chat-bg: #f7fafc;
+            --sidebar-bg: #edf2f7;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--chat-bg);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow: hidden; /* Prevent body scroll */
+        }
+
+        .chat-app {
+            display: grid;
+            grid-template-columns: 300px 1fr 280px;
+            grid-template-rows: 60px 1fr;
+            grid-template-areas: 
+                "header header header"
+                "sidebar main workflow";
+            height: 100vh;
+            gap: 1px;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Header */
+        .header {
+            grid-area: header;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-btn:hover {
+            background: var(--secondary);
+            color: var(--text-primary);
+        }
+
+        .session-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .session-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .session-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-indicators {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(72, 187, 120, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(72, 187, 120, 0.2);
+        }
+
+        .status-indicator.processing {
+            background: rgba(236, 201, 75, 0.1);
+            color: var(--warning);
+            border-color: rgba(236, 201, 75, 0.2);
+        }
+
+        .status-indicator.disconnected {
+            background: rgba(245, 101, 101, 0.1);
+            color: var(--error);
+            border-color: rgba(245, 101, 101, 0.2);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Sidebar */
+        .sidebar {
+            grid-area: sidebar;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            color: var(--text-primary);
+            overflow-y: auto;
+            height: calc(100vh - 60px); /* Fixed height minus header */
+        }
+
+        .sidebar-section {
+            margin-bottom: 32px;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .agent-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .agent-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .agent-card.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(49, 130, 206, 0.1);
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .agent-icon {
+            width: 24px;
+            height: 24px;
+            color: var(--accent);
+        }
+
+        .agent-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .agent-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .metric {
+            background: white;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Main Chat Area */
+        .main-content {
+            grid-area: main;
+            background: var(--chat-bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            height: calc(100vh - 60px); /* Fixed height minus header */
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            background: var(--primary);
+            color: white;
+        }
+
+        .ai-avatar {
+            background: var(--accent);
+            color: white;
+        }
+
+        .message-content {
+            max-width: 70%;
+            background: white;
+            border-radius: 18px;
+            padding: 16px 20px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: var(--primary);
+            color: white;
+        }
+
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .message.user .message-meta {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .agent-badge {
+            background: var(--accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .agent-badge.source-rag {
+            background: #667eea; /* Soft blue for RAG/Resources */
+        }
+
+        .agent-badge.source-tools {
+            background: #ed8936; /* Soft orange for Tools */
+        }
+
+        .agent-badge.source-llm {
+            background: var(--success); /* Soft green for General AI */
+        }
+
+        .tools-used {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tool-badge {
+            background: rgba(56, 178, 172, 0.1);
+            color: var(--accent);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            border: 1px solid rgba(56, 178, 172, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Markdown Content Styles */
+        .message-content h1, .message-content h2, .message-content h3, 
+        .message-content h4, .message-content h5, .message-content h6 {
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .message-content h1 { font-size: 1.5em; }
+        .message-content h2 { font-size: 1.3em; }
+        .message-content h3 { font-size: 1.1em; }
+
+        .message-content p {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+
+        .message-content ul, .message-content ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message-content li {
+            margin: 4px 0;
+        }
+
+        .message-content blockquote {
+            margin: 12px 0;
+            padding: 8px 16px;
+            border-left: 4px solid var(--primary);
+            background: rgba(49, 130, 206, 0.05);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .message-content code {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .message-content pre {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .message-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .message-content a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .message-content a:hover {
+            text-decoration: underline;
+        }
+
+        .message-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+
+        .message-content th, .message-content td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: left;
+        }
+
+        .message-content th {
+            background: var(--secondary);
+            font-weight: 600;
+        }
+
+        /* Input Area */
+        .input-area {
+            border-top: 1px solid var(--border);
+            padding: 20px 24px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            justify-content: center;
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 2px solid var(--border);
+            background: white;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .toggle-label:hover {
+            border-color: var(--primary);
+        }
+
+        .toggle-label input[type="radio"] {
+            display: none;
+        }
+
+        .toggle-label input[type="radio"]:checked + span {
+            color: var(--primary);
+        }
+
+        .toggle-label:has(input[type="radio"]:checked) {
+            border-color: var(--primary);
+            background: rgba(49, 130, 206, 0.05);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            position: relative;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .message-input {
+            width: 100%;
+            min-height: 50px;
+            max-height: 120px;
+            padding: 14px 50px 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 25px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .message-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+        }
+
+        .send-button {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: translateY(-50%);
+        }
+
+        /* Workflow Panel */
+        .workflow-panel {
+            grid-area: workflow;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+            height: calc(100vh - 60px); /* Fixed height minus header */
+        }
+
+        .workflow-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .workflow-step {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .workflow-step.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(49, 130, 206, 0.1);
+            transform: scale(1.02);
+        }
+
+        .workflow-step.completed {
+            background: rgba(72, 187, 120, 0.05);
+            border-color: var(--success);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .step-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--primary);
+        }
+
+        .step-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .step-status {
+            margin-left: auto;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .step-status.active {
+            background: var(--warning);
+            animation: pulse 2s infinite;
+        }
+
+        .step-status.completed {
+            background: var(--success);
+        }
+
+        .step-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .thinking-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 20px;
+            background: rgba(49, 130, 206, 0.05);
+            border-radius: 18px;
+            margin-bottom: 16px;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .thinking-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: thinking 1.4s infinite ease-in-out;
+        }
+
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes thinking {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .chat-app {
+                grid-template-columns: 260px 1fr;
+                grid-template-areas: 
+                    "header header"
+                    "sidebar main";
+            }
+            
+            .workflow-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .chat-app {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "header"
+                    "main";
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .header {
+                padding: 0 16px;
+            }
+            
+            .chat-container,
+            .input-area {
+                padding: 16px;
+            }
+
+            .header-left {
+                gap: 8px;
+            }
+
+            .session-info {
+                font-size: 14px;
+            }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(113, 128, 150, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(113, 128, 150, 0.5);
+        }
+
+        /* Screen reader only content */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="back-btn" onclick="goBack()" title="Back to Dashboard">
+                    <i data-lucide="arrow-left" style="width: 20px; height: 20px;"></i>
+                    <span style="font-size: 14px; margin-left: 4px;">← Dashboard</span>
+                </button>
+                <div class="session-info">
+                    <div class="session-name">{{ session.name }}</div>
+                    <div class="session-meta">
+                        {{ session.message_count }} messages • 
+                        Last active {{ session.last_active.strftime('%m/%d/%Y %I:%M %p') }}
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="status-indicators">
+                    <div class="status-indicator" id="system-status">
+                        <div class="pulse"></div>
+                        <span>Connecting...</span>
+                    </div>
+                    <div class="status-indicator" id="connection-status">
+                        <i data-lucide="wifi-off"></i>
+                        <span>Disconnected</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Active Agents</h3>
+                
+                <div class="agent-card" data-agent="supervisor">
+                    <div class="agent-header">
+                        <i data-lucide="brain" class="agent-icon"></i>
+                        <span class="agent-name">Supervisor</span>
+                    </div>
+                    <p class="agent-description">Routes requests to appropriate agents based on context analysis</p>
+                </div>
+
+                <div class="agent-card" data-agent="chatbot">
+                    <div class="agent-header">
+                        <i data-lucide="message-circle" class="agent-icon"></i>
+                        <span class="agent-name">Chatbot Agent</span>
+                    </div>
+                    <p class="agent-description">Handles conversations with Wikipedia integration</p>
+                </div>
+
+                <div class="agent-card" data-agent="rag">
+                    <div class="agent-header">
+                        <i data-lucide="search" class="agent-icon"></i>
+                        <span class="agent-name">RAG Agent</span>
+                    </div>
+                    <p class="agent-description">Searches documents and knowledge base</p>
+                </div>
+
+                <div class="agent-card" data-agent="memory">
+                    <div class="agent-header">
+                        <i data-lucide="database" class="agent-icon"></i>
+                        <span class="agent-name">Memory System</span>
+                    </div>
+                    <p class="agent-description">Manages context and conversation history</p>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Session Metrics</h3>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="message-count">{{ session.message_count }}</div>
+                        <div class="metric-label">Messages</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="tool-usage">{{ session.tools_used }}</div>
+                        <div class="metric-label">Tools Used</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="main-content">
+            <div class="chat-container" id="chat-container">
+                <!-- Load existing messages -->
+                {% if messages %}
+                    {% for msg in messages %}
+                    <div class="message user">
+                        <div class="message-avatar user-avatar">{{ user.username[0].upper() }}</div>
+                        <div class="message-content">
+                            <div class="message-meta">
+                                <span>You</span>
+                                <span>{{ msg.created_at.strftime('%I:%M %p') }}</span>
+                            </div>
+                            <p>{{ msg.user_message }}</p>
+                        </div>
+                    </div>
+                    <div class="message">
+                        <div class="message-avatar ai-avatar">AI</div>
+                        <div class="message-content">
+                            <div class="message-meta">
+                                <span class="agent-badge">{{ msg.metadata.get('agent_type', 'chatbot') }}</span>
+                                <span>{{ msg.created_at.strftime('%I:%M %p') }}</span>
+                            </div>
+                            <p>{{ msg.ai_response }}</p>
+                            {% if msg.metadata.get('tools_used') %}
+                            <div class="tools-used">
+                                {% for tool in msg.metadata.tools_used %}
+                                <span class="tool-badge">
+                                    <i data-lucide="tool"></i>
+                                    {{ tool.replace('_', ' ') }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Welcome message if no existing messages -->
+                    <div class="message">
+                        <div class="message-avatar ai-avatar">AI</div>
+                        <div class="message-content">
+                            <div class="message-meta">
+                                <span class="agent-badge">System</span>
+                                <span>Just now</span>
+                            </div>
+                            <p>Hello! I'm ready to help you in this session: "{{ session.name }}". 
+                            {% if session.description %}{{ session.description }}{% endif %}
+                            What would you like to discuss?</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="input-area">
+                <div class="input-container">
+                    <!-- Mode Toggle -->
+                    <div class="mode-toggle">
+                        <label class="toggle-label">
+                            <input type="radio" name="chat-mode" value="general" checked id="general-mode">
+                            <span>General</span>
+                        </label>
+                        <label class="toggle-label">
+                            <input type="radio" name="chat-mode" value="rag" id="rag-mode">
+                            <span>My Resources</span>
+                        </label>
+                    </div>
+                    <div class="input-wrapper">
+                        <label for="message-input" class="sr-only">Type your message</label>
+                        <textarea 
+                            id="message-input" 
+                            class="message-input" 
+                            placeholder="Type your message here..."
+                            rows="1"
+                            aria-label="Message input"
+                            aria-describedby="send-button"
+                        ></textarea>
+                        <button id="send-button" class="send-button" aria-label="Send message" title="Send message">
+                            <i data-lucide="send"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Workflow Panel -->
+        <aside class="workflow-panel">
+            <h3 class="workflow-title">Workflow Status</h3>
+            
+            <div class="workflow-step" data-step="memory">
+                <div class="step-header">
+                    <i data-lucide="database" class="step-icon"></i>
+                    <span class="step-title">Memory Fetch</span>
+                    <div class="step-status"></div>
+                </div>
+                <p class="step-description">Loading conversation context and user profile</p>
+            </div>
+
+            <div class="workflow-step" data-step="supervisor">
+                <div class="step-header">
+                    <i data-lucide="brain" class="step-icon"></i>
+                    <span class="step-title">Supervisor Analysis</span>
+                    <div class="step-status"></div>
+                </div>
+                <p class="step-description">Analyzing intent and routing to appropriate agent</p>
+            </div>
+
+            <div class="workflow-step" data-step="agent">
+                <div class="step-header">
+                    <i data-lucide="cpu" class="step-icon"></i>
+                    <span class="step-title">Agent Processing</span>
+                    <div class="step-status"></div>
+                </div>
+                <p class="step-description">Generating response with tools and context</p>
+            </div>
+
+            <div class="workflow-step" data-step="update">
+                <div class="step-header">
+                    <i data-lucide="save" class="step-icon"></i>
+                    <span class="step-title">Memory Update</span>
+                    <div class="step-status"></div>
+                </div>
+                <p class="step-description">Saving conversation to memory system</p>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // Wait for DOM and Lucide to load before initializing
+        document.addEventListener('DOMContentLoaded', function() {
+            function initializeLucide() {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                } else {
+                    setTimeout(initializeLucide, 100);
+                }
+            }
+            initializeLucide();
+        });
+
+        // Session and user info from template
+        const sessionId = '{{ session._id }}';
+        const userId = '{{ user._id }}';
+        const userName = '{{ user.username }}';
+        const wsAuthToken = '{{ ws_auth_token }}';
+
+        // Chat management class
+        class ChatManager {
+            constructor() {
+                this.websocket = null;
+                this.isProcessing = false;
+                this.messageCount = {{ session.message_count }};
+                this.toolUsage = {{ session.tools_used }};
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 5;
+                
+                this.initializeElements();
+                this.initializeWebSocket();
+            }
+
+            initializeElements() {
+                this.chatContainer = document.getElementById('chat-container');
+                this.messageInput = document.getElementById('message-input');
+                this.sendButton = document.getElementById('send-button');
+                this.systemStatus = document.getElementById('system-status');
+                this.connectionStatus = document.getElementById('connection-status');
+                this.messageCountEl = document.getElementById('message-count');
+                this.toolUsageEl = document.getElementById('tool-usage');
+
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                // Send message events
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Auto-resize textarea
+                this.messageInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                });
+            }
+
+            async initializeWebSocket() {
+                try {
+                    // Get auth token from cookie
+                    const authToken = this.getAuthTokenFromCookie();
+                    
+                    if (!authToken) {
+                        console.error('No auth token found');
+                        this.updateSystemStatus('error');
+                        return;
+                    }
+                    
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${protocol}//${window.location.host}/ws/${sessionId}`;
+                    
+                    this.websocket = new WebSocket(wsUrl);
+                    
+                    this.websocket.onopen = () => {
+                        console.log('WebSocket connected');
+                        this.updateConnectionStatus('connected', 'Connected');
+                        this.updateSystemStatus('ready');
+                        this.reconnectAttempts = 0;
+                        
+                        // Send authentication
+                        this.websocket.send(JSON.stringify({
+                            type: 'auth',
+                            auth_token: authToken
+                        }));
+                    };
+                    
+                    this.websocket.onmessage = (event) => {
+                        try {
+                            const data = JSON.parse(event.data);
+                            this.handleWebSocketMessage(data);
+                        } catch (error) {
+                            console.error('Error parsing WebSocket message:', error);
+                        }
+                    };
+                    
+                    this.websocket.onclose = (event) => {
+                        console.log('WebSocket disconnected:', event.code);
+                        this.updateConnectionStatus('disconnected', 'Disconnected');
+                        this.updateSystemStatus('disconnected');
+                        
+                        // Attempt to reconnect
+                        this.scheduleReconnect();
+                    };
+                    
+                    this.websocket.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                        this.updateConnectionStatus('disconnected', 'Connection Error');
+                    };
+                    
+                } catch (error) {
+                    console.error('Failed to initialize WebSocket:', error);
+                    this.updateSystemStatus('error');
+                }
+            }
+
+            scheduleReconnect() {
+                if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+                    console.log('Max reconnection attempts reached');
+                    return;
+                }
+
+                this.reconnectAttempts++;
+                const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+                
+                this.updateConnectionStatus('connecting', `Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+                
+                setTimeout(() => {
+                    this.initializeWebSocket();
+                }, delay);
+            }
+
+            getAuthTokenFromCookie() {
+                // Return the WebSocket auth token passed from the template
+                return wsAuthToken;
+            }
+
+            handleWebSocketMessage(data) {
+                switch (data.type) {
+                    case 'auth_success':
+                        console.log('Authentication successful');
+                        break;
+                    
+                    case 'auth_error':
+                        console.error('Authentication failed:', data.message);
+                        this.updateSystemStatus('error');
+                        break;
+                    
+                    case 'thinking':
+                        this.showThinkingIndicator(data.message || 'AI is thinking...');
+                        this.updateWorkflowStatus(data.step || 'processing', 'active');
+                        break;
+                    
+                    case 'partial_response':
+                        this.updatePartialResponse(data.message, data.agent_type);
+                        break;
+                    
+                    case 'response':
+                    case 'chat_response':
+                        this.hideThinkingIndicator();
+                        this.addAIMessage(data.response || data.message, data.agent_type, data.tools_used, data.metadata);
+                        this.updateWorkflowComplete();
+                        this.isProcessing = false;
+                        this.enableInput();
+                        break;
+                    
+                    case 'error':
+                        this.hideThinkingIndicator();
+                        this.showError(data.message);
+                        this.isProcessing = false;
+                        this.enableInput();
+                        break;
+                    
+                    case 'workflow_update':
+                        this.updateWorkflowStatus(data.step, data.status, data.description);
+                        break;
+                    
+                    case 'agent_active':
+                        this.highlightAgent(data.agent_type);
+                        break;
+                    
+                    case 'connection_established':
+                        console.log('WebSocket connection established:', data.message);
+                        this.updateSystemStatus('connected');
+                        this.updateConnectionStatus('connected', 'Connected');
+                        break;
+                    
+                    default:
+                        console.log('Unknown message type:', data.type);
+                }
+            }
+
+            sendMessage() {
+                if (this.isProcessing || !this.websocket || this.websocket.readyState !== WebSocket.OPEN) {
+                    return;
+                }
+
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+
+                // Reset workflow status for new request
+                this.resetWorkflowStatus();
+
+                // Add user message to chat
+                this.addUserMessage(message);
+                
+                // Clear input
+                this.messageInput.value = '';
+                this.messageInput.style.height = 'auto';
+                
+                // Disable input while processing
+                this.disableInput();
+                this.isProcessing = true;
+
+                // Get selected mode
+                const selectedMode = document.querySelector('input[name="chat-mode"]:checked').value;
+                
+                // Send to WebSocket
+                this.websocket.send(JSON.stringify({
+                    type: 'chat_message',
+                    message: message,
+                    mode: selectedMode,
+                    session_id: sessionId,
+                    user_id: userId
+                }));
+
+                // Update metrics
+                this.messageCount++;
+                this.updateMetrics();
+            }
+
+            addUserMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message user';
+                
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                messageDiv.innerHTML = `
+                    <div class="message-avatar user-avatar">${userName.charAt(0).toUpperCase()}</div>
+                    <div class="message-content">
+                        <div class="message-meta">
+                            <span>You</span>
+                            <span>${timeString}</span>
+                        </div>
+                        <p>${this.escapeHtml(message)}</p>
+                    </div>
+                `;
+                
+                this.chatContainer.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            addAIMessage(message, agentType = 'chatbot', toolsUsed = [], metadata = {}) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                // Determine source type and icon
+                const sourceInfo = this.getSourceInfo(agentType, toolsUsed);
+                
+                let toolsHtml = '';
+                if (toolsUsed && toolsUsed.length > 0) {
+                    toolsHtml = `
+                        <div class="tools-used">
+                            ${toolsUsed.map(tool => `
+                                <span class="tool-badge">
+                                    <i data-lucide="tool"></i>
+                                    ${this.escapeHtml(tool.replace('_', ' '))}
+                                </span>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+                
+                messageDiv.innerHTML = `
+                    <div class="message-avatar ai-avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-meta">
+                            <span class="agent-badge ${sourceInfo.class}">
+                                <i data-lucide="${sourceInfo.icon}"></i>
+                                ${sourceInfo.label}
+                            </span>
+                            <span>${timeString}</span>
+                        </div>
+                        <p>${this.formatMessage(message)}</p>
+                        ${toolsHtml}
+                    </div>
+                `;
+                
+                this.chatContainer.appendChild(messageDiv);
+                this.scrollToBottom();
+                
+                // Re-initialize Lucide icons for the new content
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+
+            getSourceInfo(agentType, toolsUsed) {
+                console.log('getSourceInfo called with:', agentType, toolsUsed); // Debug log
+                
+                // Determine source type based on agent and tools used
+                if (agentType === 'rag_agent' || agentType === 'rag') {
+                    return {
+                        icon: 'database',
+                        label: 'My Resources',
+                        class: 'source-rag'
+                    };
+                } else if (toolsUsed && toolsUsed.length > 0 && (agentType === 'chatbot' || agentType === 'chat')) {
+                    return {
+                        icon: 'tool',
+                        label: 'Tools',
+                        class: 'source-tools'
+                    };
+                } else if (agentType === 'chatbot' || agentType === 'chat') {
+                    return {
+                        icon: 'brain',
+                        label: 'General AI',
+                        class: 'source-llm'
+                    };
+                } else {
+                    // Fallback - show the actual agent type for debugging
+                    return {
+                        icon: 'help-circle',
+                        label: agentType || 'Unknown',
+                        class: 'source-llm'
+                    };
+                }
+            }
+
+            showThinkingIndicator(message = 'AI is thinking...') {
+                // Remove any existing thinking indicator
+                this.hideThinkingIndicator();
+                
+                const thinkingDiv = document.createElement('div');
+                thinkingDiv.className = 'thinking-indicator';
+                thinkingDiv.id = 'thinking-indicator';
+                
+                thinkingDiv.innerHTML = `
+                    <div class="thinking-dots">
+                        <div class="thinking-dot"></div>
+                        <div class="thinking-dot"></div>
+                        <div class="thinking-dot"></div>
+                    </div>
+                    <span>${message}</span>
+                `;
+                
+                this.chatContainer.appendChild(thinkingDiv);
+                this.scrollToBottom();
+            }
+
+            hideThinkingIndicator() {
+                const thinkingIndicator = document.getElementById('thinking-indicator');
+                if (thinkingIndicator) {
+                    thinkingIndicator.remove();
+                }
+            }
+
+            updatePartialResponse(message, agentType) {
+                let partialDiv = document.getElementById('partial-response');
+                
+                if (!partialDiv) {
+                    partialDiv = document.createElement('div');
+                    partialDiv.className = 'message';
+                    partialDiv.id = 'partial-response';
+                    
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    partialDiv.innerHTML = `
+                        <div class="message-avatar ai-avatar">AI</div>
+                        <div class="message-content">
+                            <div class="message-meta">
+                                <span class="agent-badge">${this.escapeHtml(agentType)}</span>
+                                <span>${timeString}</span>
+                            </div>
+                            <p class="partial-content">${this.formatMessage(message)}</p>
+                        </div>
+                    `;
+                    
+                    this.chatContainer.appendChild(partialDiv);
+                } else {
+                    const contentEl = partialDiv.querySelector('.partial-content');
+                    if (contentEl) {
+                        contentEl.innerHTML = this.formatMessage(message);
+                    }
+                }
+                
+                this.scrollToBottom();
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'message';
+                
+                const now = new Date();
+                const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                errorDiv.innerHTML = `
+                    <div class="message-avatar ai-avatar">AI</div>
+                    <div class="message-content" style="border-color: var(--error); background: rgba(239, 68, 68, 0.05);">
+                        <div class="message-meta">
+                            <span class="agent-badge" style="background: var(--error);">Error</span>
+                            <span>${timeString}</span>
+                        </div>
+                        <p>Sorry, I encountered an error: ${this.escapeHtml(message)}</p>
+                    </div>
+                `;
+                
+                this.chatContainer.appendChild(errorDiv);
+                this.scrollToBottom();
+            }
+
+            updateWorkflowStatus(step, status, description = null) {
+                const stepEl = document.querySelector(`[data-step="${step}"]`);
+                if (!stepEl) return;
+
+                const statusEl = stepEl.querySelector('.step-status');
+                
+                if (status === 'active') {
+                    // Remove active from all steps but preserve completed states
+                    document.querySelectorAll('.workflow-step').forEach(el => {
+                        el.classList.remove('active');
+                        const elStatusEl = el.querySelector('.step-status');
+                        elStatusEl.classList.remove('active');
+                        // Don't remove completed class - keep it
+                    });
+                    
+                    // Set current step as active (and remove completed if it was set)
+                    stepEl.classList.remove('completed');
+                    statusEl.classList.remove('completed');
+                    stepEl.classList.add('active');
+                    statusEl.classList.add('active');
+                    
+                } else if (status === 'completed') {
+                    // Mark current step as completed and remove active
+                    stepEl.classList.remove('active');
+                    statusEl.classList.remove('active');
+                    stepEl.classList.add('completed');
+                    statusEl.classList.add('completed');
+                }
+
+                // Update description if provided
+                if (description) {
+                    const descEl = stepEl.querySelector('.step-description');
+                    if (descEl) {
+                        descEl.textContent = description;
+                    }
+                }
+            }
+
+            updateWorkflowComplete() {
+                // Mark all steps as completed
+                document.querySelectorAll('.workflow-step').forEach(el => {
+                    el.classList.remove('active');
+                    el.classList.add('completed');
+                    const statusEl = el.querySelector('.step-status');
+                    statusEl.classList.remove('active');
+                    statusEl.classList.add('completed');
+                });
+            }
+
+            resetWorkflowStatus() {
+                // Reset all steps to initial state
+                document.querySelectorAll('.workflow-step').forEach(el => {
+                    el.classList.remove('active', 'completed');
+                    const statusEl = el.querySelector('.step-status');
+                    statusEl.classList.remove('active', 'completed');
+                });
+            }
+
+            highlightAgent(agentType) {
+                // Remove active state from all agents
+                document.querySelectorAll('.agent-card').forEach(card => {
+                    card.classList.remove('active');
+                });
+
+                // Add active state to current agent
+                const agentCard = document.querySelector(`[data-agent="${agentType}"]`);
+                if (agentCard) {
+                    agentCard.classList.add('active');
+                }
+            }
+
+            updateConnectionStatus(status, message) {
+                const connectionStatus = this.connectionStatus;
+                const icon = connectionStatus.querySelector('i');
+                const text = connectionStatus.querySelector('span');
+
+                // Reset classes
+                connectionStatus.classList.remove('processing', 'disconnected');
+                
+                switch (status) {
+                    case 'connected':
+                        icon.setAttribute('data-lucide', 'wifi');
+                        connectionStatus.style.background = 'rgba(16, 185, 129, 0.1)';
+                        connectionStatus.style.color = 'var(--success)';
+                        connectionStatus.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                        break;
+                    case 'connecting':
+                        connectionStatus.classList.add('processing');
+                        icon.setAttribute('data-lucide', 'wifi');
+                        break;
+                    case 'disconnected':
+                    default:
+                        connectionStatus.classList.add('disconnected');
+                        icon.setAttribute('data-lucide', 'wifi-off');
+                        break;
+                }
+
+                text.textContent = message;
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            }
+
+            updateSystemStatus(status) {
+                const systemStatus = this.systemStatus;
+                const text = systemStatus.querySelector('span');
+
+                // Reset classes
+                systemStatus.classList.remove('processing', 'disconnected');
+
+                switch (status) {
+                    case 'ready':
+                        text.textContent = 'System Ready';
+                        systemStatus.style.background = 'rgba(16, 185, 129, 0.1)';
+                        systemStatus.style.color = 'var(--success)';
+                        systemStatus.style.borderColor = 'rgba(16, 185, 129, 0.2)';
+                        break;
+                    case 'processing':
+                        systemStatus.classList.add('processing');
+                        text.textContent = 'Processing...';
+                        break;
+                    case 'error':
+                        systemStatus.classList.add('disconnected');
+                        text.textContent = 'System Error';
+                        break;
+                    case 'disconnected':
+                        systemStatus.classList.add('disconnected');
+                        text.textContent = 'Disconnected';
+                        break;
+                    default:
+                        text.textContent = 'Connecting...';
+                }
+            }
+
+            updateMetrics() {
+                if (this.messageCountEl) {
+                    this.messageCountEl.textContent = this.messageCount;
+                }
+                if (this.toolUsageEl) {
+                    this.toolUsageEl.textContent = this.toolUsage;
+                }
+            }
+
+            disableInput() {
+                this.messageInput.disabled = true;
+                this.sendButton.disabled = true;
+                this.sendButton.style.opacity = '0.5';
+            }
+
+            enableInput() {
+                this.messageInput.disabled = false;
+                this.sendButton.disabled = false;
+                this.sendButton.style.opacity = '1';
+                this.messageInput.focus();
+            }
+
+            scrollToBottom() {
+                setTimeout(() => {
+                    this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+                }, 100);
+            }
+
+            formatMessage(message) {
+                // Use Marked.js for markdown parsing with security settings
+                if (typeof marked !== 'undefined') {
+                    // Configure marked for security
+                    marked.setOptions({
+                        sanitize: false,
+                        gfm: true,
+                        breaks: true,
+                        highlight: null
+                    });
+                    
+                    try {
+                        return marked.parse(message);
+                    } catch (e) {
+                        console.error('Markdown parsing error:', e);
+                        // Fallback to basic formatting
+                        return this.basicFormatMessage(message);
+                    }
+                } else {
+                    // Fallback if marked is not loaded
+                    return this.basicFormatMessage(message);
+                }
+            }
+            
+            basicFormatMessage(message) {
+                // First escape HTML to prevent XSS
+                message = this.escapeHtml(message);
+                
+                // Convert URLs to links (now safe since HTML is escaped)
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                message = message.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+                
+                // Convert newlines to <br>
+                message = message.replace(/\n/g, '<br>');
+                
+                return message;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize chat manager when DOM is loaded
+        let chatManager;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            chatManager = new ChatManager();
+        });
+
+        // Utility functions
+        function goBack() {
+            window.location.href = '/dashboard';
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + Enter to send message
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                if (chatManager) {
+                    chatManager.sendMessage();
+                }
+            }
+            
+            // Escape to clear input
+            if (e.key === 'Escape') {
+                const messageInput = document.getElementById('message-input');
+                if (messageInput && messageInput === document.activeElement) {
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
+                    messageInput.blur();
+                }
+            }
+        });
+
+        // Handle window beforeunload
+        window.addEventListener('beforeunload', function() {
+            if (chatManager && chatManager.websocket) {
+                chatManager.websocket.close();
+            }
+        });
+
+        // Handle visibility change to manage connection
+        document.addEventListener('visibilitychange', function() {
+            if (chatManager) {
+                if (document.hidden) {
+                    // Page is now hidden - could pause reconnection attempts
+                    console.log('Page hidden');
+                } else {
+                    // Page is now visible - could resume connection
+                    console.log('Page visible');
+                    if (!chatManager.websocket || chatManager.websocket.readyState === WebSocket.CLOSED) {
+                        chatManager.initializeWebSocket();
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

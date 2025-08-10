@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Multi-Agent AI System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #3182ce;
+            --primary-dark: #2b6cb0;
+            --secondary: #edf2f7;
+            --accent: #38b2ac;
+            --success: #48bb78;
+            --warning: #ecc94b;
+            --error: #f56565;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border: #e2e8f0;
+            --glass: rgba(247, 250, 252, 0.9);
+            --chat-bg: #f7fafc;
+            --sidebar-bg: #edf2f7;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--chat-bg);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .main-container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .auth-wrapper {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .auth-info {
+            background: var(--secondary);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            color: var(--text-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        .brand-logo i {
+            width: 32px;
+            height: 32px;
+            color: var(--primary);
+        }
+
+        .info-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .info-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .features-list i {
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+        }
+
+        .auth-form {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            border: 1px solid;
+        }
+
+        .alert-error {
+            background: rgba(245, 101, 101, 0.1);
+            color: var(--error);
+            border-color: rgba(245, 101, 101, 0.2);
+        }
+
+        .alert-success {
+            background: rgba(72, 187, 120, 0.1);
+            color: var(--success);
+            border-color: rgba(72, 187, 120, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+            color: var(--text-primary);
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .form-input.error {
+            border-color: var(--error);
+            box-shadow: 0 0 0 3px rgba(245, 101, 101, 0.1);
+        }
+
+        .form-input.success {
+            border-color: var(--success);
+            box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            width: 18px;
+            height: 18px;
+            transition: color 0.3s ease;
+        }
+
+        .input-wrapper:focus-within .input-icon {
+            color: var(--primary);
+        }
+
+        .password-strength {
+            margin-top: 8px;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            background: var(--error);
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .strength-fill.weak { background: var(--error); width: 25%; }
+        .strength-fill.fair { background: var(--warning); width: 50%; }
+        .strength-fill.good { background: var(--accent); width: 75%; }
+        .strength-fill.strong { background: var(--success); width: 100%; }
+
+        .strength-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 2rem 0 1.5rem 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.1);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-footer {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .form-footer p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .form-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .form-footer a:hover {
+            color: var(--primary-dark);
+        }
+
+        .field-error {
+            display: block;
+            color: var(--error);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem;
+            }
+
+            .auth-wrapper {
+                grid-template-columns: 1fr;
+                max-width: 400px;
+            }
+
+            .auth-info {
+                padding: 2rem;
+                text-align: center;
+            }
+
+            .info-title {
+                font-size: 2rem;
+            }
+
+            .auth-form {
+                padding: 2rem;
+            }
+
+            .form-title {
+                font-size: 1.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-form {
+                padding: 1.5rem;
+            }
+
+            .auth-info {
+                padding: 1.5rem;
+            }
+        }
+
+        /* Form validation animations */
+        .form-input.invalid {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Focus trap for accessibility */
+        .form-input:focus {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="main-container">
+        <div class="auth-wrapper">
+            <!-- Left Panel - Information -->
+            <div class="auth-info">
+                <div class="brand-logo">
+                    <i data-lucide="brain"></i>
+                    <span>AI System</span>
+                </div>
+                
+                <h1 class="info-title">Join the Future of AI</h1>
+                <p class="info-subtitle">
+                    Experience the next generation of AI AI assistance with our advanced multi-agent system. 
+                    Get personalized help, intelligent conversations, and powerful research capabilities.
+                </p>
+                
+                <ul class="features-list">
+                    <li>
+                        <i data-lucide="brain"></i>
+                        <span>Multi-agent AI workflow</span>
+                    </li>
+                    <li>
+                        <i data-lucide="search"></i>
+                        <span>Advanced document search</span>
+                    </li>
+                    <li>
+                        <i data-lucide="globe"></i>
+                        <span>Wikipedia integration</span>
+                    </li>
+                    <li>
+                        <i data-lucide="database"></i>
+                        <span>Persistent conversations</span>
+                    </li>
+                    <li>
+                        <i data-lucide="shield-check"></i>
+                        <span>Secure & private</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Right Panel - Registration Form -->
+            <div class="auth-form">
+                <div class="form-header">
+                    <h2 class="form-title">Create Account</h2>
+                    <p class="form-subtitle">Get started with your AI assistant today</p>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-error">
+                    <i data-lucide="alert-circle" style="width: 16px; height: 16px;"></i>
+                    <span>{{ error|escape }}</span>
+                </div>
+                {% endif %}
+
+                <form method="post" id="register-form" novalidate>
+                    <div class="form-group">
+                        <label class="form-label" for="username">Username</label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="username" 
+                                name="username" 
+                                class="form-input" 
+                                placeholder="Choose a unique username"
+                                required
+                                minlength="3"
+                                maxlength="50"
+                                pattern="[a-zA-Z0-9_]+"
+                                autocomplete="username"
+                                aria-describedby="username-error"
+                            >
+                            <i data-lucide="user" class="input-icon"></i>
+                        </div>
+                        <span class="field-error" id="username-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="email" 
+                                id="email" 
+                                name="email" 
+                                class="form-input" 
+                                placeholder="Enter your email address"
+                                required
+                                autocomplete="email"
+                                aria-describedby="email-error"
+                            >
+                            <i data-lucide="mail" class="input-icon"></i>
+                        </div>
+                        <span class="field-error" id="email-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="full_name">Full Name (Optional)</label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                id="full_name" 
+                                name="full_name" 
+                                class="form-input" 
+                                placeholder="Enter your full name"
+                                maxlength="100"
+                                autocomplete="name"
+                            >
+                            <i data-lucide="user-circle" class="input-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <div class="input-wrapper">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                name="password" 
+                                class="form-input" 
+                                placeholder="Create a strong password"
+                                required
+                                minlength="6"
+                                maxlength="100"
+                                autocomplete="new-password"
+                                aria-describedby="password-error strength-text"
+                            >
+                            <i data-lucide="lock" class="input-icon"></i>
+                        </div>
+                        <div class="password-strength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" id="strength-fill"></div>
+                            </div>
+                            <span class="strength-text" id="strength-text">Enter a password to see strength</span>
+                        </div>
+                        <span class="field-error" id="password-error"></span>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submit-btn">
+                        <span id="btn-text">Create Account</span>
+                        <div id="btn-spinner" class="loading-spinner" style="display: none;"></div>
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <p>Already have an account? <a href="/login">Sign in here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Wait for DOM and Lucide to load before initializing
+        document.addEventListener('DOMContentLoaded', function() {
+            function initializeLucide() {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                } else {
+                    setTimeout(initializeLucide, 100);
+                }
+            }
+            initializeLucide();
+        });
+
+        // Form validation and interaction
+        class RegistrationForm {
+            constructor() {
+                this.form = document.getElementById('register-form');
+                this.submitBtn = document.getElementById('submit-btn');
+                this.btnText = document.getElementById('btn-text');
+                this.btnSpinner = document.getElementById('btn-spinner');
+                
+                this.initializeValidation();
+                this.initializePasswordStrength();
+                this.bindEvents();
+            }
+
+            initializeValidation() {
+                this.validators = {
+                    username: {
+                        element: document.getElementById('username'),
+                        error: document.getElementById('username-error'),
+                        validate: (value) => {
+                            if (!value) return 'Username is required';
+                            if (value.length < 3) return 'Username must be at least 3 characters';
+                            if (!/^[a-zA-Z0-9_]+$/.test(value)) return 'Username can only contain letters, numbers, and underscores';
+                            return null;
+                        }
+                    },
+                    email: {
+                        element: document.getElementById('email'),
+                        error: document.getElementById('email-error'),
+                        validate: (value) => {
+                            if (!value) return 'Email is required';
+                            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Please enter a valid email address';
+                            return null;
+                        }
+                    },
+                    password: {
+                        element: document.getElementById('password'),
+                        error: document.getElementById('password-error'),
+                        validate: (value) => {
+                            if (!value) return 'Password is required';
+                            if (value.length < 6) return 'Password must be at least 6 characters';
+                            return null;
+                        }
+                    }
+                };
+            }
+
+            initializePasswordStrength() {
+                const passwordInput = document.getElementById('password');
+                const strengthFill = document.getElementById('strength-fill');
+                const strengthText = document.getElementById('strength-text');
+
+                passwordInput.addEventListener('input', () => {
+                    const password = passwordInput.value;
+                    const strength = this.calculatePasswordStrength(password);
+                    
+                    strengthFill.className = 'strength-fill';
+                    
+                    if (password.length === 0) {
+                        strengthText.textContent = 'Enter a password to see strength';
+                        return;
+                    }
+                    
+                    const strengthLevels = ['weak', 'fair', 'good', 'strong'];
+                    const strengthTexts = ['Weak password', 'Fair password', 'Good password', 'Strong password'];
+                    
+                    const level = Math.min(strength, 3);
+                    strengthFill.classList.add(strengthLevels[level]);
+                    strengthText.textContent = strengthTexts[level];
+                });
+            }
+
+            calculatePasswordStrength(password) {
+                let strength = 0;
+                
+                if (password.length >= 8) strength++;
+                if (password.length >= 12) strength++;
+                if (/[a-z]/.test(password)) strength++;
+                if (/[A-Z]/.test(password)) strength++;
+                if (/[0-9]/.test(password)) strength++;
+                if (/[^A-Za-z0-9]/.test(password)) strength++;
+                
+                return Math.min(Math.floor(strength / 2), 3);
+            }
+
+            bindEvents() {
+                // Real-time validation
+                Object.values(this.validators).forEach(validator => {
+                    validator.element.addEventListener('blur', () => {
+                        this.validateField(validator);
+                    });
+
+                    validator.element.addEventListener('input', () => {
+                        if (validator.element.classList.contains('error')) {
+                            this.validateField(validator);
+                        }
+                    });
+                });
+
+                // Username input filtering with debouncing
+                let filterTimeout;
+                this.validators.username.element.addEventListener('input', (e) => {
+                    clearTimeout(filterTimeout);
+                    filterTimeout = setTimeout(() => {
+                        const value = e.target.value;
+                        const filtered = value.replace(/[^a-zA-Z0-9_]/g, '');
+                        if (value !== filtered) {
+                            const start = e.target.selectionStart;
+                            const end = e.target.selectionEnd;
+                            e.target.value = filtered;
+                            // Restore cursor position
+                            e.target.setSelectionRange(
+                                Math.max(0, start - (value.length - filtered.length)), 
+                                Math.max(0, end - (value.length - filtered.length))
+                            );
+                        }
+                    }, 50);
+                });
+
+                // Form submission
+                this.form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleSubmit();
+                });
+
+                // Auto-focus first input
+                this.validators.username.element.focus();
+            }
+
+            validateField(validator) {
+                const value = validator.element.value.trim();
+                const error = validator.validate(value);
+                
+                if (error) {
+                    validator.element.classList.add('error');
+                    validator.element.classList.remove('success');
+                    validator.element.setAttribute('aria-invalid', 'true');
+                    validator.error.textContent = error;
+                    validator.error.setAttribute('role', 'alert');
+                    return false;
+                } else {
+                    validator.element.classList.remove('error');
+                    validator.element.classList.add('success');
+                    validator.element.setAttribute('aria-invalid', 'false');
+                    validator.error.textContent = '';
+                    validator.error.removeAttribute('role');
+                    return true;
+                }
+            }
+
+            validateForm() {
+                let isValid = true;
+                
+                Object.values(this.validators).forEach(validator => {
+                    if (!this.validateField(validator)) {
+                        isValid = false;
+                    }
+                });
+                
+                return isValid;
+            }
+
+            handleSubmit() {
+                if (!this.validateForm()) {
+                    // Shake invalid fields
+                    Object.values(this.validators).forEach(validator => {
+                        if (validator.element.classList.contains('error')) {
+                            validator.element.classList.add('invalid');
+                            setTimeout(() => {
+                                validator.element.classList.remove('invalid');
+                            }, 500);
+                        }
+                    });
+                    return;
+                }
+
+                // Show loading state
+                this.setLoadingState(true);
+
+                // Set timeout for error recovery
+                setTimeout(() => {
+                    if (this.submitBtn.disabled) {
+                        this.setLoadingState(false);
+                    }
+                }, 10000);
+
+                // Submit form
+                this.form.submit();
+            }
+
+            setLoadingState(loading) {
+                this.submitBtn.disabled = loading;
+                this.btnText.style.display = loading ? 'none' : 'block';
+                this.btnSpinner.style.display = loading ? 'block' : 'none';
+            }
+        }
+
+        // Initialize the registration form
+        document.addEventListener('DOMContentLoaded', () => {
+            const formInstance = new RegistrationForm();
+            document.getElementById('register-form').registrationFormInstance = formInstance;
+        });
+
+        // Handle back button and form reset
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || performance.navigation.type === 2) {
+                // Reset form if page was loaded from cache or via back button
+                const form = document.getElementById('register-form');
+                const registrationFormInstance = form.registrationFormInstance;
+                
+                form.reset();
+                if (registrationFormInstance) {
+                    registrationFormInstance.setLoadingState(false);
+                    // Clear all validation states
+                    Object.values(registrationFormInstance.validators).forEach(validator => {
+                        validator.element.classList.remove('error', 'success');
+                        validator.element.removeAttribute('aria-invalid');
+                        validator.error.textContent = '';
+                        validator.error.removeAttribute('role');
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

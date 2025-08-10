@@ -1,0 +1,123 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script from a template
+#  before PyInstaller builds the exe, so as to inject date/other infos into it.
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+coverage.xml
+*.lcov
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environments
+.env
+.venv
+.ragenv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Vector store data
+chroma-data/
+weaviate-data/
+
+# Data files
+data/processed/
+data/raw/
+!data/mock_crm.json
+!data/sample_sales.csv
+!data/sample_contracts/
+
+# Frontend static files
+frontend/static/generated/
+
+# Log files
+*.log
+logs/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Docker
+docker-compose.override.yml
+
+# Streamlit
+.streamlit/
+
+# Large files
+*.pdf
+*.csv
+*.xlsx
+*.parquet
+*.feather
+*.pickle
+*.pkl
+*.h5
+*.hdf5
+
+# Exceptions (keep these)
+!data/sample_contracts/contract_alpha.pdf
+!data/sample_contracts/contract_beta.pdf
+!data/sample_sales.csv
+!data/mock_crm.json

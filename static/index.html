@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent AI System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <style>
+        /* Include all the existing styles from the original dashboard */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f1f5f9;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --glass: rgba(248, 250, 252, 0.8);
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --chat-bg: #ffffff;
+            --sidebar-bg: rgba(15, 23, 42, 0.95);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 280px;
+            grid-template-rows: 60px 1fr;
+            grid-template-areas: 
+                "header header header"
+                "sidebar main workflow";
+            height: 100vh;
+            gap: 1px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Header with session info */
+        .header {
+            grid-area: header;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--gradient);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .status-indicators {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-indicator.processing {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+
+        .status-indicator.disconnected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+
+        .pulse {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Session Management Sidebar */
+        .sidebar {
+            grid-area: sidebar;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(20px);
+            padding: 24px;
+            color: white;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 32px;
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .session-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .session-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .session-card.active {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .session-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .session-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .session-stats {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .new-session-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .new-session-btn:hover {
+            background: rgba(99, 102, 241, 0.3);
+        }
+
+        .agent-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .agent-card:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .agent-card.active {
+            background: rgba(99, 102, 241, 0.3);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .agent-icon {
+            width: 24px;
+            height: 24px;
+            color: var(--accent);
+        }
+
+        .agent-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .agent-description {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.4;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .metric {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .metric-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Rest of the existing styles for main content, workflow panel, etc. */
+        .main-content {
+            grid-area: main;
+            background: var(--chat-bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .chat-container {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .user-avatar-msg {
+            background: var(--primary);
+            color: white;
+        }
+
+        .ai-avatar {
+            background: var(--accent);
+            color: white;
+        }
+
+        .message-content {
+            max-width: 70%;
+            background: white;
+            border-radius: 18px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: var(--primary);
+            color: white;
+        }
+
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .message.user .message-meta {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .agent-badge {
+            background: var(--accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .tools-used {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tool-badge {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Input Area */
+        .input-area {
+            border-top: 1px solid var(--border);
+            padding: 20px 24px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            position: relative;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .message-input {
+            width: 100%;
+            min-height: 50px;
+            max-height: 120px;
+            padding: 14px 50px 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 25px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+            font-family: inherit;
+        }
+
+        .message-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .send-button {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: translateY(-50%);
+        }
+
+        /* Workflow Panel */
+        .workflow-panel {
+            grid-area: workflow;
+            background: rgba(248, 250, 252, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 24px;
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+        }
+
+        .workflow-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .workflow-step {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .workflow-step.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+            transform: scale(1.02);
+        }
+
+        .workflow-step.completed {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: var(--success);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .step-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--primary);
+        }
+
+        .step-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .step-status {
+            margin-left: auto;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .step-status.active {
+            background: var(--warning);
+            animation: pulse 2s infinite;
+        }
+
+        .step-status.completed {
+            background: var(--success);
+        }
+
+        .step-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .thinking-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 20px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 18px;
+            margin-bottom: 16px;
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .thinking-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .thinking-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: thinking 1.4s infinite ease-in-out;
+        }
+
+        .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes thinking {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+
+        /* Session Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-columns: 260px 1fr;
+                grid-template-areas: 
+                    "header header"
+                    "sidebar main";
+            }
+            
+            .workflow-panel {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                grid-template-columns: 1fr;
+                grid-template-areas: 
+                    "header"
+                    "main";
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .header {
+                padding: 0 16px;
+            }
+            
+            .chat-container,
+            .input-area {
+                padding: 16px;
+            }
+
+            .user-info {
+                display: none;
+            }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header with Session Info -->
+        <header class="header">
+            <div class="logo">
+                <i data-lucide="brain-circuit"></i>
+                <span>Multi-Agent AI System</span>
+            </div>
+            
+            <div class="user-info">
+                <div class="user-avatar" id="user-avatar">U</div>
+                <div>
+                    <div id="username">Loading...</div>
+                    <div id="session-name">Session</div>
+                </div>
+            </div>
+            
+            <div class="status-indicators">
+                <div class="status-indicator" id="system-status">
+                    <div class="pulse"></div>
+                    <span>Connecting...</span>
+                </div>
+                <div class="status-indicator" id="connection-status">
+                    <i data-lucide="wifi-off"></i>
+                    <span>Disconnected</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar with Session Management -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Sessions</h3>
+                
+                <button class="new-session-btn" id="new-session-btn">
+                    <i data-lucide="plus"></i>
+                    <span>New Session</span>
+                </button>
+                
+                <div id="sessions-list">
+                    <!-- Sessions will be loaded here -->
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Active Agents</h3>
+                
+                <div class="agent-card" data-agent="supervisor">
+                    <div class="agent-header">
+                        <i data-lucide="brain" class="agent-icon"></i>
+                        <span class="agent-name">Supervisor</span>
+                    </div>
+                    <p class="agent-description">Routes requests to appropriate agents based on context analysis</p>
+                </div>
+
+                <div class="agent-card" data-agent="chatbot">
+                    <div class="agent-header">
+                        <i data-lucide="message-circle" class="agent-icon"></i>
+                        <span class="agent-name">Chatbot Agent</span>
+                    </div>
+                    <p class="agent-description">Handles conversations with Wikipedia integration</p>
+                </div>
+
+                <div class="agent-card" data-agent="rag">
+                    <div class="agent-header">
+                        <i data-lucide="search" class="agent-icon"></i>
+                        <span class="agent-name">RAG Agent</span>
+                    </div>
+                    <p class="agent-description">Searches documents and knowledge base</p>
+                </div>
+
+                <div class="agent-card" data-agent="memory">
+                    <div class="agent-header">
+                        <i data-lucide="database" class="agent-icon"></i>
+                        <span class="agent-name">Memory System</span>
+                    </div>
+                    <p class="agent-description">Manages context and conversation history</p>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Session Metrics</h3>
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-value" id="message-count">0</div>
+                        <div class="metric-label">Messages</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value" id="tool-usage">0</div>
+                        <div class="metric-label">Tools Used</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <main class="main-content">
+            <div class="chat-container" id="chat-container">
+                <div class="message">
+                    <div class="message-avatar ai-avatar">AI</div>
+                    <div class="message-content">
+                        <div class="message-meta">
+                            <span class="agent-badge">System</span>
+                            <span>Just now</span>
+                        </div>
+                        <p>Hello! I'm your multi-agent AI assistant with session management. I can help you with conversations, document searches, and Wikipedia lookups. Your conversations are saved across sessions!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="message-input" 
+                            class="message-input" 
+                            placeholder="Type your message here..."
+                            rows="1"
+                        ></textarea>
+                        <button id="send-button" class="send-button">
+                            <i data-lucide="send"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Workflow Panel -->
+        <aside class="workflow-panel">
+            <h3 class="workflow-title">Workflow Status</h3>
+            
+            <div class="workflow-step" data-step="memory">
+                <div class="step-header">
+                    <i data-lucide="database" class="step-icon"></i>
+                    <span class="step-title">Memory Fetch</span>
+                    <div class="step-status"></div>
+                </div>
+                <p class="step-description">Loading conversation context and user profile</p>
+            </div>
+
+            <div class="workflow-step" data-step="supervisor">
+                <div class="step-header">
+                    <i data-lucide="brain" class="step-icon"></i>
+                    <span class="step-title">Supervisor Analysis</span>
+                    <div class="step-status"></div>
+                </div>
+                <p class="step-description">Analyzing intent and routing to appropriate agent</p>
+            </div>
+
+            <div class="workflow-step" data-step="agent">
+                <div class="step-header">
+                    <i data-lucide="cpu" class="step-icon"></i>
+                    <span class="step-title">Agent Processing</span>
+                    <div class="step-status"></div>
+                </div>
+                <p class="step-description">Generating response with tools and context</p>
+            </div>
+
+            <div class="workflow-step" data-step="update">
+                <div class="step-header">
+                    <i data-lucide="save" class="step-icon"></i>
+                    <span class="step-title">Memory Update</span>
+                    <div class="step-status"></div>
+                </div>
+                <p class="step-description">Saving conversation to memory system</p>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Session Modal -->
+    <div class="modal-overlay" id="session-modal">
+        <div class="modal">
+            <h3 class="modal-title">Create New Session</h3>
+            <form id="session-form">
+                <div class="form-group">
+                    <label class="form-label" for="session-name-input">Session Name</label>
+                    <input type="text" id="session-name-input" class="form-input" placeholder="e.g., AI Research Discussion">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="username-input">Your Name (optional)</label>
+                    <input type="text" id="username-input" class="form-input" placeholder="e.g., John Doe">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-session">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Session</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Session Management System
+        class SessionManager {
+            constructor() {
+                this.currentUser = null;
+                this.currentSession = null;
+                this.authToken = null;
+                this.websocket = null;
+                this.sessions = [];
+                this.isProcessing = false;
+                
+                this.initializeElements();
+                this.initializeSession();
+            }
+
+            initializeElements() {
+                this.chatContainer = document.getElementById('chat-container');
+                this.messageInput = document.getElementById('message-input');
+                this.sendButton = document.getElementById('send-button');
+                this.systemStatus = document.getElementById('system-status');
+                this.connectionStatus = document.getElementById('connection-status');
+                this.messageCountEl = document.getElementById('message-count');
+                this.toolUsageEl = document.getElementById('tool-usage');
+                this.usernameEl = document.getElementById('username');
+                this.sessionNameEl = document.getElementById('session-name');
+                this.userAvatarEl = document.getElementById('user-avatar');
+                this.sessionsListEl = document.getElementById('sessions-list');
+                this.newSessionBtn = document.getElementById('new-session-btn');
+                this.sessionModal = document.getElementById('session-modal');
+                this.sessionForm = document.getElementById('session-form');
+                this.cancelSessionBtn = document.getElementById('cancel-session');
+
+                this.bindEvents();
+            }
+
+            bindEvents() {
+                // Send message events
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Session management events
+                this.newSessionBtn.addEventListener('click', () => this.showSessionModal());
+                this.cancelSessionBtn.addEventListener('click', () => this.hideSessionModal());
+                this.sessionForm.addEventListener('submit', (e) => this.createSession(e));
+
+                // Auto-resize textarea
+                this.messageInput.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+                });
+            }
+
+            async initializeSession() {
+                try {
+                    // Get current session info
+                    const response = await fetch('/api/auth/me');
+                    const data = await response.json();
+                    
+                    this.currentUser = data.user;
+                    this.currentSession = data.session;
+                    
+                    // Update UI
+                    this.updateUserInfo();
+                    this.loadSessions();
+                    
+                    // Initialize WebSocket
+                    await this.initializeWebSocket();
+                    
+                } catch (error) {
+                    console.error('Failed to initialize session:', error);
+                    this.updateSystemStatus('error');
+                }
+            }
+
+            updateUserInfo() {
+                if (this.currentUser) {
+                    this.usernameEl.textContent = this.currentUser.username;
+                    this.userAvatarEl.textContent = this.currentUser.username.charAt(0).toUpperCase();
+                }
+                
+                if (this.currentSession) {
+                    this.sessionNameEl.textContent = this.currentSession.session_name || 'Session';
+                    this.messageCountEl.textContent = this.currentSession.message_count || 0;
+                    this.toolUsageEl.textContent = this.currentSession.tools_used || 0;
+                }
+            }
+
+            async loadSessions() {
+                try {
+                    const response = await fetch('/api/sessions');
+                    const data = await response.json();
+                    this.sessions = data.sessions;
+                    this.renderSessions();
+                } catch (error) {
+                    console.error('Failed to load sessions:', error);
+                }
+            }
+
+            renderSessions() {
+                this.sessionsListEl.innerHTML = '';
+                
+                this.sessions.forEach(session => {
+                    const sessionEl = document.createElement('div');
+                    sessionEl.className = `session-card ${session.session_id === this.currentSession.session_id ? 'active' : ''}`;
+                    sessionEl.dataset.sessionId = session.session_id;
+                    
+                    sessionEl.innerHTML = `
+                        <div class="session-header">
+                            <div class="session-name">${session.session_name || 'Untitled Session'}</div>
+                        </div>
+                        <div class="session-stats">${session.message_count} messages • ${new Date(session.created_at).toLocaleDateString()}</div>
+                    `;
+                    
+                    sessionEl.addEventListener('click', () => this.switchSession(session.session_id));
+                    this.sessionsListEl.appendChild(sessionEl);
+                });
+            }
+
+            async switchSession(sessionId) {
+                if (sessionId === this.currentSession.session_id) return;
+                
+                try {
+                    // Close current WebSocket
+                    if (this.websocket) {
+                        this.websocket.close();
+                    }
+                    
+                    // Create new session token (you'd implement this endpoint)
+                    const response = await fetch(`/api/sessions/${sessionId}/activate`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        // Reload page to switch session
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error('Failed to switch session:', error);
+                }
+            }
+
+            showSessionModal() {
+                this.sessionModal.classList.add('active');
+                document.getElementById('session-name-input').focus();
+            }
+
+            hideSessionModal() {
+                this.sessionModal.classList.remove('active');
+                this.sessionForm.reset();
+            }
+
+            async createSession(e) {
+                e.preventDefault();
+                
+                const sessionName = document.getElementById('session-name-input').value.trim();
+                const username = document.getElementById('username-input').value.trim();
+                
+                try {
+                    const response = await fetch('/api/sessions/new', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            session_name: sessionName || undefined,
+                            username: username || undefined
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // Reload page for new session
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    console.error('Failed to create session:', error);
+                }
+            }
+
+            async initializeWebSocket() {
+                try {
+                    // Get auth token from cookie or create session
+                    const sessionResponse = await fetch('/api/auth/session', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({})
+                    });
+                    
+                    const sessionData = await sessionResponse.json();
+                    this.authToken = await this.getAuthTokenFromCookie();
+                    
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${protocol}//${window.location.host}/ws/${this.currentSession.session_id}`;
+                    
+                    this.websocket = new WebSocket(wsUrl);
+                    
+                    this.websocket.onopen = () => {
+                        console.log('WebSocket connected');
+                        this.updateConnectionStatus('connected', 'Connected');
+                        this.updateSystemStatus('ready');
+                        
+                        // Send authentication
+                        this.websocket.send(JSON.stringify({
+                            type: 'auth',
+                            auth_token: this.authToken
+                        }));
+                    };
+                    
+                    this.websocket.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        this.handleWebSocketMessage(data);
+                    };
+                    
+                    this.websocket.onclose = () => {
+                        console.log('WebSocket disconnected');
+                        this.updateConnectionStatus('disconnected', 'Disconnected');
+                        this.updateSystemStatus('disconnected');
+                    };
+                    
+                    this.websocket.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                        this.updateConnectionStatus('disconnected', 'Connection Error');
+                    };
+                    
+                } catch (error) {
+                    console.error('Failed to initialize WebSocket:', error);
+                    this.updateSystemStatus('error');
+                }
+            }
+
+            async getAuthTokenFromCookie() {
+                // In a real implementation, you'd extract the JWT from the cookie
+                // For now, we'll use a simple approach
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === 'ai_system_session') {
+                        return value;
+                    }
+                }
+                return null;
+            }
+
+            handleWebSocketMessage(data) {
+                switch (data.type) {
+                    case 'connection_established':
+                        console.log('WebSocket authenticated for session:', data.session_id);
+                        break;
+                        
+                    case 'chat_response':
+                        this.handleChatResponse(data);
+                        break;
+                        
+                    case 'workflow_update':
+                        this.updateWorkflowStep(data.step, data.status, data.details);
+                        break;
+                        
+                    case 'agent_highlight':
+                        this.highlightActiveAgent(data.agent);
+                        break;
+                        
+                    case 'error':
+                        this.handleError(data);
+                        break;
+                        
+                    default:
+                        console.log('Unknown WebSocket message:', data);
+                }
+            }
+
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message || this.isProcessing) return;
+
+                this.isProcessing = true;
+                this.updateSystemStatus('processing');
+                
+                // Add user message to UI
+                this.addMessage(message, 'user');
+                this.messageInput.value = '';
+                this.messageInput.style.height = 'auto';
+                
+                // Show thinking indicator
+                this.showThinkingIndicator();
+                
+                try {
+                    if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
+                        // Send via WebSocket
+                        this.websocket.send(JSON.stringify({
+                            type: 'chat_message',
+                            message: message
+                        }));
+                    } else {
+                        // Fallback to REST API
+                        await this.sendMessageREST(message);
+                    }
+                } catch (error) {
+                    console.error('Failed to send message:', error);
+                    this.removeThinkingIndicator();
+                    this.addMessage("Failed to send message. Please try again.", 'ai', {
+                        agent: 'error',
+                        tools: [],
+                        metadata: { error: true }
+                    });
+                    this.isProcessing = false;
+                    this.updateSystemStatus('error');
+                }
+            }
+
+            async sendMessageREST(message) {
+                try {
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            session_id: this.currentSession.session_id
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    this.handleChatResponse(result);
+
+                } catch (error) {
+                    console.error('REST API error:', error);
+                    this.removeThinkingIndicator();
+                    this.addMessage("I apologize, but I'm having trouble connecting. Please try again.", 'ai', {
+                        agent: 'error',
+                        tools: [],
+                        metadata: { error: error.message }
+                    });
+                }
+
+                this.isProcessing = false;
+                this.updateSystemStatus('ready');
+            }
+
+            handleChatResponse(data) {
+                this.removeThinkingIndicator();
+                
+                this.addMessage(data.response, 'ai', {
+                    agent: data.agent_used,
+                    tools: data.tools_used,
+                    metadata: data.metadata
+                });
+
+                // Update session metrics
+                if (data.session_id === this.currentSession.session_id) {
+                    this.currentSession.message_count += 1;
+                    this.currentSession.tools_used += data.tools_used ? data.tools_used.length : 0;
+                    this.updateUserInfo();
+                }
+
+                this.isProcessing = false;
+                this.updateSystemStatus('ready');
+            }
+
+            handleError(data) {
+                this.removeThinkingIndicator();
+                this.addMessage(data.message || "An error occurred", 'ai', {
+                    agent: 'error',
+                    tools: [],
+                    metadata: { error: true }
+                });
+                this.isProcessing = false;
+                this.updateSystemStatus('error');
+            }
+
+            addMessage(content, type, metadata = {}) {
+                const messageEl = document.createElement('div');
+                messageEl.className = `message ${type}`;
+                
+                const avatarEl = document.createElement('div');
+                avatarEl.className = `message-avatar ${type === 'user' ? 'user-avatar-msg' : 'ai-avatar'}`;
+                avatarEl.textContent = type === 'user' ? 
+                    (this.currentUser ? this.currentUser.username.charAt(0).toUpperCase() : 'U') : 'AI';
+                
+                const contentEl = document.createElement('div');
+                contentEl.className = 'message-content';
+                
+                let metaHTML = '';
+                if (type === 'ai' && metadata.agent) {
+                    metaHTML = `
+                        <div class="message-meta">
+                            <span class="agent-badge">${metadata.agent.replace('_', ' ')}</span>
+                            <span>Just now</span>
+                        </div>
+                    `;
+                } else if (type === 'user') {
+                    metaHTML = `
+                        <div class="message-meta">
+                            <span>You</span>
+                            <span>Just now</span>
+                        </div>
+                    `;
+                }
+                
+                let toolsHTML = '';
+                if (metadata.tools && metadata.tools.length > 0) {
+                    const toolBadges = metadata.tools.map(tool => 
+                        `<span class="tool-badge">
+                            <i data-lucide="tool"></i>
+                            ${tool.replace('_', ' ')}
+                        </span>`
+                    ).join('');
+                    toolsHTML = `<div class="tools-used">${toolBadges}</div>`;
+                }
+                
+                contentEl.innerHTML = `
+                    ${metaHTML}
+                    <p>${content}</p>
+                    ${toolsHTML}
+                `;
+                
+                messageEl.appendChild(avatarEl);
+                messageEl.appendChild(contentEl);
+                this.chatContainer.appendChild(messageEl);
+                
+                // Re-initialize Lucide icons
+                lucide.createIcons();
+                
+                // Scroll to bottom
+                this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+            }
+
+            showThinkingIndicator() {
+                const thinkingEl = document.createElement('div');
+                thinkingEl.id = 'thinking-indicator';
+                thinkingEl.className = 'thinking-indicator';
+                thinkingEl.innerHTML = `
+                    <i data-lucide="brain"></i>
+                    <span>AI is thinking</span>
+                    <div class="thinking-dots">
+                        <div class="thinking-dot"></div>
+                        <div class="thinking-dot"></div>
+                        <div class="thinking-dot"></div>
+                    </div>
+                `;
+                
+                this.chatContainer.appendChild(thinkingEl);
+                lucide.createIcons();
+                this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+            }
+
+            removeThinkingIndicator() {
+                const thinkingEl = document.getElementById('thinking-indicator');
+                if (thinkingEl) {
+                    thinkingEl.remove();
+                }
+            }
+
+            updateSystemStatus(status) {
+                const statusEl = this.systemStatus.querySelector('span');
+                
+                switch (status) {
+                    case 'processing':
+                        this.systemStatus.className = 'status-indicator processing';
+                        statusEl.textContent = 'Processing...';
+                        this.sendButton.disabled = true;
+                        break;
+                    case 'ready':
+                        this.systemStatus.className = 'status-indicator';
+                        statusEl.textContent = 'System Ready';
+                        this.sendButton.disabled = false;
+                        break;
+                    case 'disconnected':
+                        this.systemStatus.className = 'status-indicator disconnected';
+                        statusEl.textContent = 'Disconnected';
+                        this.sendButton.disabled = true;
+                        break;
+                    case 'error':
+                        this.systemStatus.className = 'status-indicator disconnected';
+                        statusEl.textContent = 'Error';
+                        this.sendButton.disabled = false;
+                        break;
+                }
+            }
+
+            updateConnectionStatus(status, message) {
+                const statusEl = this.connectionStatus.querySelector('span');
+                const iconEl = this.connectionStatus.querySelector('i');
+                
+                this.connectionStatus.className = `status-indicator ${status}`;
+                statusEl.textContent = message;
+                
+                const iconName = status === 'connected' ? 'wifi' : 
+                                status === 'connecting' ? 'wifi' : 'wifi-off';
+                iconEl.setAttribute('data-lucide', iconName);
+                
+                lucide.createIcons();
+            }
+
+            updateWorkflowStep(step, status, details) {
+                const stepEl = document.querySelector(`[data-step="${step}"]`);
+                if (!stepEl) return;
+                
+                const statusEl = stepEl.querySelector('.step-status');
+                const descriptionEl = stepEl.querySelector('.step-description');
+                
+                // Remove all status classes
+                stepEl.classList.remove('active', 'completed');
+                statusEl.classList.remove('active', 'completed');
+                
+                // Add new status
+                if (status === 'active') {
+                    stepEl.classList.add('active');
+                    statusEl.classList.add('active');
+                } else if (status === 'completed') {
+                    stepEl.classList.add('completed');
+                    statusEl.classList.add('completed');
+                }
+                
+                // Update description if provided
+                if (details) {
+                    descriptionEl.textContent = details;
+                }
+            }
+
+            highlightActiveAgent(agentType) {
+                // Remove all active states
+                document.querySelectorAll('.agent-card').forEach(card => {
+                    card.classList.remove('active');
+                });
+                
+                // Map agent types to UI elements
+                const agentMap = {
+                    'supervisor': 'supervisor',
+                    'chatbot': 'chatbot',
+                    'rag_agent': 'rag',
+                    'memory': 'memory'
+                };
+                
+                const mappedAgent = agentMap[agentType] || 'chatbot';
+                const activeCard = document.querySelector(`[data-agent="${mappedAgent}"]`);
+                
+                if (activeCard) {
+                    activeCard.classList.add('active');
+                    
+                    // Remove highlight after 3 seconds
+                    setTimeout(() => {
+                        activeCard.classList.remove('active');
+                    }, 3000);
+                }
+            }
+        }
+
+        // Initialize the session-aware application
+        const sessionManager = new SessionManager();
+
+        // Agent card interactions
+        document.querySelectorAll('.agent-card').forEach(card => {
+            card.addEventListener('click', function() {
+                const agent = this.dataset.agent;
+                
+                const agentInfo = {
+                    supervisor: "I'm the Supervisor Agent. I analyze your requests and route them to the most appropriate specialist agent based on context and intent.",
+                    chatbot: "I'm the Chatbot Agent. I handle general conversations and can search Wikipedia for factual information to enhance our discussions.",
+                    rag: "I'm the RAG (Retrieval-Augmented Generation) Agent. I specialize in searching through documents, files, and knowledge bases to find relevant information.",
+                    memory: "I'm the Memory System. I maintain conversation context, user facts, and learning from our interactions to provide personalized responses."
+                };
+                
+                sessionManager.addMessage(agentInfo[agent], 'ai', {
+                    agent: agent,
+                    tools: [],
+                    metadata: { system_message: true }
+                });
+            });
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + K to focus input
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                sessionManager.messageInput.focus();
+            }
+            
+            // Escape to clear input or close modal
+            if (e.key === 'Escape') {
+                if (sessionManager.sessionModal.classList.contains('active')) {
+                    sessionManager.hideSessionModal();
+                } else {
+                    sessionManager.messageInput.value = '';
+                    sessionManager.messageInput.style.height = 'auto';
+                }
+            }
+        });
+
+        // Click outside modal to close
+        document.addEventListener('click', function(e) {
+            if (e.target === sessionManager.sessionModal) {
+                sessionManager.hideSessionModal();
+            }
+        });
+
+        // Error handling
+        window.addEventListener('error', function(e) {
+            console.error('Application error:', e.error);
+            sessionManager.addMessage(
+                "I encountered a technical issue. Please refresh the page or try again.", 
+                'ai', 
+                { agent: 'system', tools: [], metadata: { error: true } }
+            );
+        });
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && sessionManager.websocket && sessionManager.websocket.readyState !== WebSocket.OPEN) {
+                sessionManager.initializeWebSocket();
+            }
+        });
+
+        // Performance monitoring
+        console.log('🚀 Session-aware Multi-Agent AI System initialized');
+        console.log('Features: User sessions, WebSocket auth, session switching, persistent conversations');
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent AI System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.js"></script>
+    <style>
+        /* Same styles as before but with additional session management styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #f1f5f9;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --glass: rgba(248, 250, 252, 0.8);
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --chat-bg: #ffffff;
+            --sidebar-bg: rgba(15, 23, 42, 0.95);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #
