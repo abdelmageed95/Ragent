@@ -1,40 +1,12 @@
 from typing import Dict, Any, List, Annotated, Optional
 from langgraph.graph.message import add_messages
-
 from datetime import datetime
 from pydantic import BaseModel, Field, EmailStr
 
 
 # ===============================
-# State Definition
+# LangGraph State Definitions
 # ===============================
-
-class WorkflowState:
-    """
-    State object for the LangGraph workflow
-    """
-    user_message: str
-    user_id: str
-    thread_id: str
-    messages: Annotated[list, add_messages]
-    memory_context: Dict[str, Any]
-    selected_agent: str
-    agent_response: str
-    metadata: Dict[str, Any]
-    tools_used: List[str]
-    wikipedia_results: List[Dict[str, Any]]
-    
-    def __init__(self, **kwargs):
-        self.user_message = kwargs.get('user_message', '')
-        self.user_id = kwargs.get('user_id', '')
-        self.thread_id = kwargs.get('thread_id', '')
-        self.messages = kwargs.get('messages', [])
-        self.memory_context = kwargs.get('memory_context', {})
-        self.selected_agent = kwargs.get('selected_agent', '')
-        self.agent_response = kwargs.get('agent_response', '')
-        self.metadata = kwargs.get('metadata', {})
-        self.tools_used = kwargs.get('tools_used', [])
-        self.wikipedia_results = kwargs.get('wikipedia_results', [])
 
 
 class EnhancedWorkflowState:
@@ -68,11 +40,6 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=6, max_length=100)
     full_name: Optional[str] = Field(None, max_length=100)
-
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
 
 
 class UserResponse(BaseModel):
@@ -113,13 +80,4 @@ class ChatMessage(BaseModel):
     session_id: Optional[str] = None
 
 
-class ConversationMessage(BaseModel):
-    """Unified conversation message for both UI and memory system"""
-    session_id: str
-    thread_id: str  # For memory agent (can be same as session_id)
-    user_id: str
-    role: str = Field(..., pattern="^(user|assistant)$")
-    content: str
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    timestamp: datetime
-    message_pair_id: Optional[str] = None  # Link user-assistant message pairs
+# ConversationMessage removed - handled directly by DatabaseManager
