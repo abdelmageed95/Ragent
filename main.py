@@ -26,6 +26,7 @@ from core.api.auth import router as auth_router
 from core.api.sessions import router as sessions_router
 from core.api.chat import router as chat_router
 from core.api.health import router as health_router
+from core.api.knowledge_base import router as kb_router
 
 # Graph system import
 try:
@@ -85,6 +86,7 @@ app.include_router(auth_router)
 app.include_router(sessions_router)
 app.include_router(chat_router)
 app.include_router(health_router)
+app.include_router(kb_router)
 
 
 # ===============================

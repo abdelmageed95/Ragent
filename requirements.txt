@@ -1,6 +1,7 @@
 paddlepaddle
 pdfplumber
 pypdf2
+pymupdf
 paddleocr
 pillow==11.3.0
 setuptools

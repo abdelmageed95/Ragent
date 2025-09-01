@@ -457,6 +457,103 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(113, 128, 150, 0.5);
         }
+
+        /* File Upload Styles */
+        .file-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 32px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+        }
+
+        .file-upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(49, 130, 206, 0.05);
+        }
+
+        .file-upload-area.dragover {
+            border-color: var(--primary);
+            background: rgba(49, 130, 206, 0.1);
+        }
+
+        .file-list {
+            margin-top: 16px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--secondary);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .file-name {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-left: 8px;
+        }
+
+        .file-remove {
+            background: none;
+            border: none;
+            color: var(--error);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .file-remove:hover {
+            background: rgba(245, 101, 101, 0.1);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin: 16px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--secondary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* KB Status Styles */
+        .kb-status-good {
+            border-color: var(--success) !important;
+            background: rgba(72, 187, 120, 0.1) !important;
+        }
+
+        .kb-status-empty {
+            border-color: var(--warning) !important;
+            background: rgba(236, 201, 75, 0.1) !important;
+        }
     </style>
 </head>
 <body>
@@ -552,6 +649,26 @@
                             <div class="stat-value">{{ ((now() - user.created_at).days) }}</div>
                             <div class="stat-label">Days Active</div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="features-card">
+                    <h4 style="margin-bottom: 16px; color: var(--text-primary);">Knowledge Base</h4>
+                    <div id="kb-info" style="margin-bottom: 16px;">
+                        <div class="kb-status" style="padding: 12px; background: white; border-radius: 8px; border: 1px solid var(--border);">
+                            <div style="font-size: 14px; color: var(--text-secondary);">Loading...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="kb-actions" style="display: flex; flex-direction: column; gap: 8px;">
+                        <button class="btn btn-primary" onclick="showKBUploadModal()" style="width: 100%; justify-content: center;">
+                            <i data-lucide="upload">📤</i>
+                            Upload PDFs
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearKnowledgeBase()" style="width: 100%; justify-content: center;">
+                            <i data-lucide="trash-2">🗑️</i>
+                            Clear KB
+                        </button>
                     </div>
                 </div>
 
@@ -669,7 +786,50 @@
         </div>
     </div>
 
+    <!-- Knowledge Base Upload Modal -->
+    <div class="modal-overlay" id="kb-upload-modal">
+        <div class="modal" style="max-width: 600px;">
+            <h3 class="modal-title">Upload PDF Documents</h3>
+            <p class="modal-subtitle">Build your knowledge base by uploading PDF files (max 10 files, 50MB each)</p>
+            
+            <div class="file-upload-area" onclick="document.getElementById('pdf-files').click()" 
+                 ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                <i data-lucide="upload-cloud" style="width: 48px; height: 48px; color: var(--text-secondary); margin-bottom: 16px;">☁️📤</i>
+                <div style="font-size: 16px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">
+                    Drop PDF files here or click to browse
+                </div>
+                <div style="font-size: 14px; color: var(--text-secondary);">
+                    Supports multiple files • Maximum 50MB per file
+                </div>
+                <input type="file" id="pdf-files" accept=".pdf" multiple style="display: none;" onchange="handleFileSelect(event)">
+            </div>
+            
+            <div id="file-list" class="file-list" style="display: none;"></div>
+            
+            <div id="upload-progress" class="progress-container" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="progress-text" id="progress-text">Preparing upload...</div>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="hideKBUploadModal()">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="upload-btn" onclick="startUpload()" disabled>
+                    <i data-lucide="upload">📤</i>
+                    Build Knowledge Base
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Global variables for KB functionality
+        let selectedFiles = [];
+        let currentTaskId = null;
+
         // Wait for DOM and Lucide to load before initializing
         document.addEventListener('DOMContentLoaded', function() {
             // Check if lucide is loaded, if not wait for it
@@ -691,7 +851,264 @@
                     lucide.createIcons();
                 }
             }, 1000);
+
+            // Load KB info on page load
+            loadKBInfo();
         });
+
+        // Knowledge Base Functions
+        async function loadKBInfo() {
+            try {
+                const response = await fetch('/api/kb/info');
+                if (response.ok) {
+                    const info = await response.json();
+                    updateKBStatus(info);
+                } else {
+                    document.getElementById('kb-info').innerHTML = 
+                        '<div class="kb-status kb-status-empty"><div style="font-size: 14px; color: var(--text-secondary);">Failed to load KB info</div></div>';
+                }
+            } catch (error) {
+                console.error('Error loading KB info:', error);
+                document.getElementById('kb-info').innerHTML = 
+                    '<div class="kb-status kb-status-empty"><div style="font-size: 14px; color: var(--text-secondary);">Error loading KB info</div></div>';
+            }
+        }
+
+        function updateKBStatus(info) {
+            const kbInfo = document.getElementById('kb-info');
+            if (info.has_knowledge_base) {
+                kbInfo.innerHTML = `
+                    <div class="kb-status kb-status-good">
+                        <div style="font-size: 14px; font-weight: 500; color: var(--success); margin-bottom: 4px;">✅ Knowledge Base Ready</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">
+                            ${info.text_index_exists ? 'Text index ✓' : ''} 
+                            ${info.image_index_exists ? 'Image index ✓' : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                kbInfo.innerHTML = `
+                    <div class="kb-status kb-status-empty">
+                        <div style="font-size: 14px; font-weight: 500; color: var(--warning); margin-bottom: 4px;">⚠️ No Knowledge Base</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Upload PDFs to create your knowledge base</div>
+                    </div>
+                `;
+            }
+        }
+
+        function showKBUploadModal() {
+            document.getElementById('kb-upload-modal').classList.add('active');
+            selectedFiles = [];
+            updateFileList();
+            resetProgress();
+            setTimeout(() => {
+                if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                    lucide.createIcons();
+                }
+            }, 50);
+        }
+
+        function hideKBUploadModal() {
+            document.getElementById('kb-upload-modal').classList.remove('active');
+            selectedFiles = [];
+            updateFileList();
+            resetProgress();
+            if (currentTaskId) {
+                currentTaskId = null;
+            }
+        }
+
+        // File handling functions
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            addFilesToSelection(files);
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('dragover');
+            const files = Array.from(event.dataTransfer.files).filter(file => file.type === 'application/pdf');
+            addFilesToSelection(files);
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('dragover');
+        }
+
+        function addFilesToSelection(files) {
+            for (const file of files) {
+                if (file.type !== 'application/pdf') {
+                    alert(`${file.name} is not a PDF file`);
+                    continue;
+                }
+                if (file.size > 50 * 1024 * 1024) {
+                    alert(`${file.name} is too large (max 50MB)`);
+                    continue;
+                }
+                if (selectedFiles.length >= 10) {
+                    alert('Maximum 10 files allowed');
+                    break;
+                }
+                if (selectedFiles.some(f => f.name === file.name)) {
+                    continue; // Skip duplicates
+                }
+                selectedFiles.push(file);
+            }
+            updateFileList();
+        }
+
+        function updateFileList() {
+            const fileList = document.getElementById('file-list');
+            const uploadBtn = document.getElementById('upload-btn');
+            
+            if (selectedFiles.length === 0) {
+                fileList.style.display = 'none';
+                uploadBtn.disabled = true;
+                return;
+            }
+            
+            fileList.style.display = 'block';
+            uploadBtn.disabled = false;
+            
+            fileList.innerHTML = selectedFiles.map((file, index) => `
+                <div class="file-item">
+                    <div>
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-size">(${formatFileSize(file.size)})</span>
+                    </div>
+                    <button class="file-remove" onclick="removeFile(${index})" title="Remove file">
+                        ✕
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // Upload and progress functions
+        async function startUpload() {
+            if (selectedFiles.length === 0) return;
+            
+            const uploadBtn = document.getElementById('upload-btn');
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i data-lucide="loader" style="animation: spin 1s linear infinite;">⏳</i> Uploading...';
+            
+            showProgress();
+            
+            try {
+                const formData = new FormData();
+                selectedFiles.forEach(file => {
+                    formData.append('files', file);
+                });
+                
+                updateProgress(10, 'Uploading files...');
+                
+                const response = await fetch('/api/kb/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    currentTaskId = result.task_id;
+                    updateProgress(20, 'Upload complete. Processing...');
+                    
+                    // Start polling for progress
+                    pollProgress();
+                } else {
+                    const error = await response.text();
+                    throw new Error(error);
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                updateProgress(0, `Upload failed: ${error.message}`);
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i data-lucide="upload">📤</i> Build Knowledge Base';
+            }
+        }
+
+        async function pollProgress() {
+            if (!currentTaskId) return;
+            
+            try {
+                const response = await fetch(`/api/kb/status/${currentTaskId}`);
+                if (response.ok) {
+                    const status = await response.json();
+                    updateProgress(status.progress, status.message);
+                    
+                    if (status.status === 'completed') {
+                        setTimeout(() => {
+                            hideKBUploadModal();
+                            loadKBInfo(); // Refresh KB status
+                            alert('Knowledge base created successfully!');
+                        }, 1000);
+                    } else if (status.status === 'error') {
+                        updateProgress(0, status.message);
+                        document.getElementById('upload-btn').disabled = false;
+                        document.getElementById('upload-btn').innerHTML = '<i data-lucide="upload">📤</i> Build Knowledge Base';
+                    } else {
+                        // Continue polling
+                        setTimeout(pollProgress, 2000);
+                    }
+                } else {
+                    throw new Error('Failed to get status');
+                }
+            } catch (error) {
+                console.error('Status polling error:', error);
+                updateProgress(0, `Status check failed: ${error.message}`);
+            }
+        }
+
+        function showProgress() {
+            document.getElementById('upload-progress').style.display = 'block';
+        }
+
+        function resetProgress() {
+            document.getElementById('upload-progress').style.display = 'none';
+            document.getElementById('progress-fill').style.width = '0%';
+            document.getElementById('progress-text').textContent = 'Preparing upload...';
+        }
+
+        function updateProgress(percentage, message) {
+            document.getElementById('progress-fill').style.width = percentage + '%';
+            document.getElementById('progress-text').textContent = message;
+        }
+
+        async function clearKnowledgeBase() {
+            if (!confirm('Are you sure you want to clear the knowledge base? This will delete all indices and cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/kb/clear', {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadKBInfo(); // Refresh KB status
+                    alert('Knowledge base cleared successfully');
+                } else {
+                    alert('Failed to clear knowledge base');
+                }
+            } catch (error) {
+                console.error('Error clearing KB:', error);
+                alert('Error clearing knowledge base');
+            }
+        }
 
         // Session Management
         function showNewSessionModal() {
@@ -843,12 +1260,19 @@
             }
         });
 
+        document.getElementById('kb-upload-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideKBUploadModal();
+            }
+        });
+
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             // Escape to close modal
             if (e.key === 'Escape') {
                 hideSessionModal();
                 hideEditSessionModal();
+                hideKBUploadModal();
             }
             
             // Ctrl/Cmd + N for new session
@@ -862,7 +1286,8 @@
         setInterval(() => {
             // Only refresh if no modal is open
             if (!document.getElementById('session-modal').classList.contains('active') && 
-                !document.getElementById('edit-session-modal').classList.contains('active')) {
+                !document.getElementById('edit-session-modal').classList.contains('active') &&
+                !document.getElementById('kb-upload-modal').classList.contains('active')) {
                 window.location.reload();
             }
         }, 60000*2);

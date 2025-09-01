@@ -27,10 +27,12 @@ A sophisticated multi-agent AI system built with FastAPI, LangGraph, and MongoDB
 - **Memory Agent**: Context-aware conversation history management
 
 #### Document Processing
-- PDF text extraction and chunking
-- Image extraction from PDFs with OCR capabilities
-- Multimodal embedding generation (text + image)
-- FAISS vector indexing for efficient similarity search
+- **Smart Page Analysis**: PyMuPDF-based detection of images, charts, and tables
+- **Selective Processing**: Text-only pages → text extraction, visual pages → image conversion
+- **PDF text extraction and chunking**: Optimized for text-only pages (500-word chunks, 50-word overlap)
+- **Image extraction from PDFs**: Targeted conversion of visual content pages only
+- **Multimodal embedding generation**: Specialized Cohere embeddings per content type
+- **Dual FAISS indexing**: Separate optimized indices for text and visual content
 
 ## 📊 System Architecture
 
@@ -93,6 +95,9 @@ The system uses a LangGraph-based workflow for intelligent agent routing:
 
 ### AI/ML Libraries
 - **LangChain**: LLM application framework
+- **PyMuPDF**: Advanced PDF analysis and content detection
+- **FAISS**: High-performance vector similarity search
+- **Cohere**: Multimodal embedding generation
 - **Qdrant**: Vector database support
 - **PaddleOCR**: Optical character recognition
 - **PIL**: Image processing
@@ -128,11 +133,11 @@ agentic-rag/
 │   ├── rag_node.py       # RAG agent implementation
 │   ├── chat_node.py      # Chatbot agent implementation
 │   └── memory_nodes.py   # Memory management nodes
-├── rag_agent/             # RAG system components
-│   ├── ragagent.py       # RAG system implementation
-│   ├── embedding_helpers.py # Embedding utilities
-│   ├── loading_helpers.py   # Data loading utilities
-│   └── build_kb.py       # Knowledge base building
+├── rag_agent/             # Intelligent RAG system components
+│   ├── ragagent.py       # RAG system implementation with selective retrieval
+│   ├── embedding_helpers.py # Cohere embedding utilities for text/image
+│   ├── loading_helpers.py   # FAISS index and metadata loading utilities  
+│   └── build_kb.py       # Smart knowledge base building with page analysis
 ├── memory/                # Memory management
 │   ├── mem_agent.py      # Memory agent implementation
 │   └── mem_config.py     # Memory configuration
@@ -198,7 +203,7 @@ COHERE_API_KEY=your_cohere_api_key  # Optional
 Ensure MongoDB is running and accessible at the configured URL.
 
 6. **Document Processing (Optional)**
-Place PDF documents in the `pdfs/` directory and run the document processing pipeline to create FAISS indices.
+Place PDF documents in the `pdfs/` directory and run the intelligent document processing pipeline. The system will automatically analyze each page for content type and process through the appropriate modality (text-only vs visual content).
 
 ## 📷 Screenshots
 
@@ -293,10 +298,13 @@ The system automatically routes user queries to the most appropriate agent:
 - **Context-dependent** → Memory-aware routing
 
 ### Advanced RAG Capabilities
-- Multimodal document processing (text + images)
-- Semantic similarity search with FAISS
-- Context-aware response generation
-- Source citation and evidence linking
+- **Intelligent Page Analysis**: Automatic detection of images, charts, and tables
+- **Selective Processing**: Text-only pages → text pipeline, visual pages → image pipeline
+- **Zero Redundancy**: Each page processed through exactly one optimized modality
+- **Multimodal document processing**: Specialized handling for text + images
+- **Semantic similarity search**: Dual FAISS indices with modality-specific optimization
+- **Context-aware response generation**: Enhanced with page-type metadata
+- **Source citation and evidence linking**: Tracks processing modality and page numbers
 
 ### Memory & Persistence
 - Conversation history stored in MongoDB
