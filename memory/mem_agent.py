@@ -5,13 +5,10 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 import os
 from langchain.docstore.document import Document
-#from langchain.vectorstores import Qdrant as LCQdrant
-from qdrant_client import QdrantClient
-from qdrant_client.http import models as qdrant_models
 from pymongo import MongoClient
-from langchain_qdrant import Qdrant as LCQdrant
 from openai import OpenAI
 from memory.mem_config import MemoryConfig
+from core.vector_store import get_chroma_client
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -26,13 +23,14 @@ class MemoryAgent:
     """
     Agentic memory manager handling:
       - Short-term conversational context (in-memory)
-      - Long-term semantic memory (Qdrant)
+      - Long-term semantic memory (ChromaDB)
       - Structured user facts (MongoDB using LLM extraction)
       - Persistent message history for UI pagination (MongoDB)
 
-    Uses OpenAI text-embedding-3-small for long-term embeddings and GPT-4o Mini to extract facts.
+    Uses local sentence-transformers for embeddings (free, no API costs) and GPT-4o Mini to extract facts.
     """
     def __init__(
+            
         self,
         user_id: str,
         thread_id: str,
@@ -42,18 +40,21 @@ class MemoryAgent:
         self.thread_id = str(thread_id)
         self.cfg = cfg or MemoryConfig()
 
-        # ----- Qdrant long-term memory -----
-        self.qdrant_client = QdrantClient(
-            url=self.cfg.qdrant_url,
-            api_key=self.cfg.qdrant_api_key
+        # ----- ChromaDB long-term memory (using singleton manager) -----
+        os.makedirs(self.cfg.chroma_db_dir, exist_ok=True)
+        self.chroma_client = get_chroma_client(self.cfg.chroma_db_dir)
+
+        self.collection_name = (
+            f"{self.cfg.memory_collection_prefix}_{self.user_id}_{self.thread_id}"
         )
-      
-        self.collection_name = f"mem_{self.user_id}_{self.thread_id}"
-        self._ensure_qdrant_collection()
-        self.qdrant_store = LCQdrant(
-            client=self.qdrant_client,
-            collection_name=self.collection_name,
-            embeddings=self.cfg.embeddings,
+        self.collection = self.chroma_client.get_or_create_collection(
+            name=self.collection_name,
+            metadata={
+                "description": (
+                    f"Long-term memory for user {self.user_id}, "
+                    f"thread {self.thread_id}"
+                )
+            }
         )
 
         # ----- MongoDB structured facts & unified conversations -----
@@ -64,19 +65,6 @@ class MemoryAgent:
 
         # ----- In-memory short-term buffer -----
         self._short_term: List[Dict[str, str]] = []
-
-    def _ensure_qdrant_collection(self) -> None:
-        """Create the Qdrant collection if it does not exist."""
-        if not self.qdrant_client.collection_exists(self.collection_name):
-            # Use cached dimension instead of embedding a test query
-            dim = 1536  # text-embedding-3-small default dimension
-            self.qdrant_client.create_collection(
-                collection_name=self.collection_name,
-                vectors_config=qdrant_models.VectorParams(
-                    size=dim,
-                    distance=qdrant_models.Distance.COSINE,
-                ),
-            )
 
     def fetch_short_term(self) -> List[Dict[str,Any]]:
         # pull the last N messages from unified conversations collection
@@ -116,12 +104,36 @@ class MemoryAgent:
         query: Optional[str] = None,
         k: int = 5,
     ) -> List[Document]:
-        """Semantic recall of past conversation turns."""
+        """Semantic recall of past conversation turns using ChromaDB."""
         if query is None and self._short_term and self._short_term[-1]["role"] == "user":
             query = self._short_term[-1]["content"]
         if not query:
             return []
-        return self.qdrant_store.similarity_search(query, k=k)
+
+        # Check if collection is empty
+        if self.collection.count() == 0:
+            return []
+
+        # Generate embedding for query
+        query_embedding = self.cfg.embeddings.encode(query).tolist()
+
+        # Query ChromaDB
+        results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=min(k, self.collection.count())
+        )
+
+        # Convert ChromaDB results to LangChain Document format
+        documents = []
+        if results and results['documents'] and len(results['documents']) > 0:
+            for i, doc_content in enumerate(results['documents'][0]):
+                metadata = results['metadatas'][0][i] if results['metadatas'] else {}
+                documents.append(Document(
+                    page_content=doc_content,
+                    metadata=metadata
+                ))
+
+        return documents
 
     def get_user_facts(self) -> Dict[str, Any]:
         """Retrieve the deduplicated facts dictionary for this user."""
@@ -146,14 +158,26 @@ class MemoryAgent:
         # The main application (DatabaseManager) handles persistence to unified collection
         print(f"📝 Memory: Skipping duplicate message save for {self.user_id}:{self.thread_id}")
 
-        # 3) Persist long-term memory
+        # 3) Persist long-term memory to ChromaDB
         combined = f"User: {user_message}\nAssistant: {assistant_message}"
-        doc = Document(page_content=combined, metadata={
-            "user_id": self.user_id,
-            "thread_id": self.thread_id,
-            "timestamp": timestamp.isoformat(),
-        })
-        self.qdrant_store.add_documents([doc])
+
+        # Generate embedding
+        embedding = self.cfg.embeddings.encode(combined).tolist()
+
+        # Create unique ID for this conversation turn
+        doc_id = f"{self.user_id}_{self.thread_id}_{timestamp.timestamp()}"
+
+        # Add to ChromaDB
+        self.collection.add(
+            ids=[doc_id],
+            documents=[combined],
+            embeddings=[embedding],
+            metadatas=[{
+                "user_id": self.user_id,
+                "thread_id": self.thread_id,
+                "timestamp": timestamp.isoformat(),
+            }]
+        )
 
         # 4) Merge and update facts
         existing = self.get_user_facts()  # existing dict
@@ -180,14 +204,26 @@ class MemoryAgent:
         if excess > 0:
             self._short_term = self._short_term[excess:]
 
-        # 2) Update long-term embeddings for semantic search
+        # 2) Update long-term embeddings for semantic search in ChromaDB
         combined = f"User: {user_message}\nAssistant: {assistant_message}"
-        doc = Document(page_content=combined, metadata={
-            "user_id": self.user_id,
-            "thread_id": self.thread_id,
-            "timestamp": timestamp.isoformat(),
-        })
-        self.qdrant_store.add_documents([doc])
+
+        # Generate embedding
+        embedding = self.cfg.embeddings.encode(combined).tolist()
+
+        # Create unique ID for this conversation turn
+        doc_id = f"{self.user_id}_{self.thread_id}_{timestamp.timestamp()}"
+
+        # Add to ChromaDB
+        self.collection.add(
+            ids=[doc_id],
+            documents=[combined],
+            embeddings=[embedding],
+            metadatas=[{
+                "user_id": self.user_id,
+                "thread_id": self.thread_id,
+                "timestamp": timestamp.isoformat(),
+            }]
+        )
 
         # 3) Update user facts
         existing = self.get_user_facts()
@@ -199,7 +235,7 @@ class MemoryAgent:
                 {"$set": {"facts": merged, "last_update": timestamp}},
                 upsert=True,
             )
-        
+
         print(f"🧠 Memory: Updated facts and embeddings for {self.user_id}:{self.thread_id} (no duplicate messages)")
         
     @staticmethod

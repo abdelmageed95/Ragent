@@ -7,7 +7,7 @@ The Memory Agent is a comprehensive memory management system for the agentic AI 
 The memory system operates on three distinct layers:
 
 1. **Short-term Memory**: Recent conversation context (in-memory buffer)
-2. **Long-term Memory**: Semantic embeddings for conversation retrieval (Qdrant vector store)
+2. **Long-term Memory**: Semantic embeddings for conversation retrieval (ChromaDB vector store)
 3. **User Facts**: Structured personal information extracted from conversations (MongoDB)
 4. **Message Persistence**: Unified conversation storage (MongoDB conversations collection)
 
@@ -71,8 +71,8 @@ relevant_docs = memory_agent.fetch_long_term(
 **Returns:** List of Document objects with relevant conversation content
 
 **Implementation:**
-- Uses Qdrant vector store for similarity search
-- Embeds query using OpenAI text-embedding-3-small
+- Uses ChromaDB vector store for similarity search
+- Embeds query using local sentence-transformers (all-MiniLM-L6-v2)
 - Returns most semantically similar past conversations
 
 #### 3. Get User Facts
@@ -114,7 +114,7 @@ memory_agent.update_facts_and_embeddings(user_message, assistant_response)
 
 **What it does:**
 - Updates in-memory short-term buffer for context
-- Adds conversation to Qdrant vector store for semantic search
+- Adds conversation to ChromaDB vector store for semantic search
 - Extracts and updates user facts using LLM
 - **Does NOT** save messages to database (handled by main app)
 
@@ -129,14 +129,15 @@ class MemoryConfig:
     # Database connections
     mongo_uri: str = "mongodb://localhost:27017"
     db_name: str = "agentic_memory"
-    qdrant_url: str = "http://localhost:6333"
-    qdrant_api_key: Optional[str] = None
-    
-    # Memory settings  
+    chroma_db_dir: str = "data/chroma_db"
+
+    # Memory settings
     short_term_window: int = 10  # Number of recent message pairs
-    
+    memory_collection_prefix: str = "memory"
+
     # AI models
-    embeddings: OpenAIEmbeddings  # For vector storage
+    embedding_model_name: str = "all-MiniLM-L6-v2"  # Local, free embeddings
+    embeddings: SentenceTransformer  # For vector storage
 ```
 
 ## Database Schema
@@ -176,14 +177,15 @@ Stores extracted structured information:
 }
 ```
 
-### Qdrant Vector Store
+### ChromaDB Vector Store
 
-Collection per user-thread: `mem_{user_id}_{thread_id}`
+Collection per user-thread: `memory_{user_id}_{thread_id}`
 
 Stores conversation embeddings for semantic search:
-- **Vectors**: 1536-dimensional embeddings (text-embedding-3-small)
+- **Vectors**: 384-dimensional embeddings (all-MiniLM-L6-v2)
 - **Metadata**: `{user_id, thread_id, timestamp}`
 - **Content**: Combined user-assistant conversation pairs
+- **Storage**: File-based in `data/chroma_db/` directory
 
 ## Integration with Main Application
 
@@ -286,15 +288,15 @@ mock_agent.update_facts_and_embeddings("test", "response")
 ### Required Environment Variables
 
 ```bash
-# OpenAI API (for embeddings and fact extraction)
+# OpenAI API (for fact extraction only - GPT-4o Mini)
 OPENAI_API_KEY=your_openai_api_key
 
 # MongoDB (for facts and conversation storage)
 MONGODB_URL=mongodb://localhost:27017
 
-# Qdrant (for vector similarity search)
-QDRANT_URL=http://localhost:6333
-QDRANT_API_KEY=optional_qdrant_api_key
+# ChromaDB (optional - defaults shown)
+CHROMA_DB_DIR=data/chroma_db
+EMBEDDING_MODEL=all-MiniLM-L6-v2
 ```
 
 ### Docker Services
@@ -306,21 +308,19 @@ services:
     image: mongo:latest
     ports:
       - "27017:27017"
-      
-  qdrant:
-    image: qdrant/qdrant:latest
-    ports:
-      - "6333:6333"
 ```
+
+**Note**: ChromaDB is file-based and requires no separate service.
 
 ## Performance Considerations
 
 ### Optimization Strategies
 
 1. **Short-term Buffer**: In-memory caching of recent messages
-2. **Vector Indexing**: Qdrant provides fast similarity search
+2. **Vector Indexing**: ChromaDB provides fast similarity search
 3. **Fact Merging**: Only extracts facts from user messages (not assistant)
 4. **Lazy Loading**: Collections created only when needed
+5. **Local Embeddings**: No API latency, faster generation
 
 ### Memory Limits
 
@@ -333,8 +333,9 @@ services:
 ### Common Issues
 
 1. **"Connection refused" errors**:
-   - Ensure MongoDB and Qdrant services are running
-   - Check connection URLs and ports
+   - Ensure MongoDB service is running
+   - Check MongoDB connection URL and port
+   - ChromaDB requires no separate service
 
 2. **"Collection not found" errors**:
    - Collections are auto-created on first use
@@ -400,6 +401,26 @@ class EnhancedMemoryConfig(MemoryConfig):
     fact_retention_days: int = 365
     enable_cross_user_search: bool = False
 ```
+
+---
+
+## Recent Updates
+
+### ChromaDB Migration (October 2025)
+
+The Memory Agent has been migrated from Qdrant to ChromaDB for long-term memory storage:
+
+- **Previous**: Qdrant vector database + OpenAI embeddings (paid)
+- **Current**: ChromaDB (file-based) + Local sentence-transformers (free)
+
+**Benefits**:
+- Simplified stack (no separate vector database service)
+- Zero API costs for embeddings
+- Unified technology with RAG system
+- Offline capability
+- Better data privacy
+
+See `MEMORY_CHROMADB_MIGRATION.md` for detailed migration information.
 
 ---
 

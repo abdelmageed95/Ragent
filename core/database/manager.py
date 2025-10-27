@@ -116,6 +116,8 @@ class DatabaseManager:
             "user_id": ObjectId(user_id),
             "name": session_data.name,
             "description": session_data.description,
+            "session_type": session_data.session_type,  # "ai" or "rag"
+            "rag_mode": session_data.rag_mode if session_data.session_type == "rag" else None,  # "specific_files" or "unified_kb"
             "created_at": datetime.now(),
             "last_active": datetime.now(),
             "message_count": 0,

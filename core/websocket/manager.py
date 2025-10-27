@@ -6,30 +6,34 @@ from typing import Dict, Any
 from datetime import datetime
 from fastapi import WebSocket
 
-from graph.workflow import EnhancedLangGraphMultiAgentSystem, create_enhanced_langgraph_system
+from graph.workflow import LangGraphMultiAgentSystem, create_langgraph_system
 from core.database.manager import DatabaseManager
 
 
 class DatabaseAwareMultiAgentManager:
-    """Multi-agent manager with database integration and performance optimizations"""
-    
+    """Multi-agent manager with database integration"""
+
     def __init__(self, db: DatabaseManager):
         self.db = db
-        self.langgraph_systems: Dict[str, EnhancedLangGraphMultiAgentSystem] = {}
+        self.langgraph_systems: Dict[str, LangGraphMultiAgentSystem] = {}
         self.memory_agents: Dict[str, Any] = {}  # Cache memory agents
         self.active_websockets: Dict[str, WebSocket] = {}
-    
-    def get_or_create_system(self, user_id: str, session_id: str) -> EnhancedLangGraphMultiAgentSystem:
+
+    def get_or_create_system(
+        self,
+        user_id: str,
+        session_id: str
+    ) -> LangGraphMultiAgentSystem:
         """Get or create LangGraph system for user session"""
         system_key = f"{user_id}:{session_id}"
-        
+
         if system_key not in self.langgraph_systems:
-            self.langgraph_systems[system_key] = create_enhanced_langgraph_system(
+            self.langgraph_systems[system_key] = create_langgraph_system(
                 user_id=user_id,
                 thread_id=session_id
             )
             print(f"🎯 Created LangGraph system for {system_key}")
-        
+
         return self.langgraph_systems[system_key]
     
     async def process_message(
@@ -40,7 +44,25 @@ class DatabaseAwareMultiAgentManager:
         chat_mode: str = "general"
     ) -> Dict[str, Any]:
         """Process message with database tracking"""
-        
+
+        # Use the chat_mode passed from the WebSocket handler
+        # (which gets it from the session_type in the database)
+        session_mode = chat_mode  # "rag" or "general"
+
+        print(f"📝 Session mode for routing: {session_mode}")
+
+        # Get session from database to retrieve rag_mode (for RAG sessions)
+        session = await self.db.get_session_by_id(session_id, user_id)
+        rag_mode = session.get("rag_mode", "unified_kb") if session else "unified_kb"
+
+        # Determine collection name for RAG queries
+        if session_mode == "rag" and rag_mode == "specific_files":
+            collection_name = f"session_{session_id}"
+        else:
+            collection_name = "documents"  # Unified KB
+
+        print(f"📚 Collection: {collection_name} (mode: {rag_mode})")
+
         # Get system for this user session
         system = self.get_or_create_system(user_id, session_id)
         
@@ -87,7 +109,7 @@ class DatabaseAwareMultiAgentManager:
         
         try:
             result = await system.process_with_progress_tracking(
-                message, session_id, websocket_callback, chat_mode
+                message, session_id, websocket_callback, session_mode, collection_name, rag_mode
             )
             
             # Update database

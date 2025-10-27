@@ -25,6 +25,7 @@ async def get_user_sessions(
                 id=str(session["_id"]),
                 name=session["name"],
                 description=session.get("description"),
+                session_type=session.get("session_type", "ai"),
                 created_at=session["created_at"],
                 last_active=session["last_active"],
                 message_count=session["message_count"],

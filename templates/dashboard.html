@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Multi-Agent AI System</title>
+    <title>Dashboard - AI Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         * {
@@ -13,98 +14,222 @@
         }
 
         :root {
-            --primary: #3182ce;
-            --primary-dark: #2b6cb0;
-            --secondary: #edf2f7;
-            --accent: #38b2ac;
-            --success: #48bb78;
-            --warning: #ecc94b;
-            --error: #f56565;
-            --text-primary: #2d3748;
-            --text-secondary: #718096;
+            /* Calm, professional color palette */
+            --primary: #64748b;
+            --primary-light: #94a3b8;
+            --primary-dark: #475569;
+            --accent: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+
+            /* Neutral tones */
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+
+            /* Text colors */
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+
+            /* Backgrounds */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+
+            /* Borders */
             --border: #e2e8f0;
-            --glass: rgba(247, 250, 252, 0.9);
-            --chat-bg: #f7fafc;
-            --sidebar-bg: #edf2f7;
+            --border-hover: #cbd5e1;
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--chat-bg);
-            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-secondary);
             color: var(--text-primary);
-            overflow: hidden; /* Prevent full page scroll */
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
+        .dashboard-wrapper {
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            height: 100vh;
         }
 
+        /* Header */
         .header {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 24px 32px;
-            margin-bottom: 32px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex: 0 0 auto;
         }
 
-        .user-info {
+        .logo {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
-        .user-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: white;
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            font-size: 18px;
-        }
-
-        .user-details h2 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-
-        .user-stats {
-            color: var(--text-secondary);
-            font-size: 14px;
+            color: white;
+            font-size: 1.25rem;
         }
 
         .header-actions {
             display: flex;
-            gap: 12px;
+            align-items: center;
+            gap: 1rem;
         }
 
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .user-menu {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
+            padding: 0.5rem 1rem;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-menu:hover {
+            background: var(--gray-200);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--primary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        /* Main Content */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+            flex: 1;
+        }
+
+        .page-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Sessions Section */
+        .section {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--primary);
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
             text-decoration: none;
+            font-family: inherit;
         }
 
         .btn-primary {
@@ -114,301 +239,339 @@
 
         .btn-primary:hover {
             background: var(--primary-dark);
-            transform: translateY(-2px);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-secondary {
-            background: var(--secondary);
+            background: var(--bg-tertiary);
             color: var(--text-primary);
+            border: 1px solid var(--border);
         }
 
         .btn-secondary:hover {
-            background: #e2e8f0;
+            background: var(--gray-200);
+            border-color: var(--border-hover);
         }
 
-        .main-content {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 32px;
-            overflow: hidden;
+        .btn-accent {
+            background: var(--accent);
+            color: white;
         }
 
-        .sessions-section {
-            background: var(--sidebar-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 32px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            display: flex;
-            flex-direction: column;
-            height: calc(100vh - 200px); /* Fixed height to allow scrolling */
+        .btn-accent:hover {
+            background: #0891b2;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
         }
 
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            flex: 0 0 auto;
+        .btn-outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
         }
 
-        .section-title {
-            font-size: 20px;
-            font-weight: 700;
+        .btn-outline:hover {
+            background: var(--bg-tertiary);
+            border-color: var(--border-hover);
             color: var(--text-primary);
         }
 
-        .sessions-grid {
+        .btn i {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Sessions Grid */
+        .sessions-container {
             display: grid;
-            gap: 16px;
-            flex: 1;
+            gap: 1rem;
+            max-height: 500px;
             overflow-y: auto;
-            min-height: 0; /* Important: allows flex child to shrink */
+            padding-right: 0.5rem;
+        }
+
+        .sessions-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sessions-container::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .sessions-container::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 3px;
+        }
+
+        .sessions-container::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
         }
 
         .session-card {
-            background: white;
-            border: 2px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             cursor: pointer;
-            position: relative;
+            transition: all 0.2s;
         }
 
         .session-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.1);
+            background: var(--bg-primary);
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow);
+            transform: translateX(4px);
         }
 
-        .session-card.empty {
-            border: 2px dashed var(--border);
-            text-align: center;
-            color: var(--text-secondary);
-            min-height: 120px;
+        .session-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
         }
 
-        .session-card.empty:hover {
-            border-color: var(--primary);
-            color: var(--primary);
+        .session-icon.ai {
+            background: linear-gradient(135deg, #06b6d4, #64748b);
         }
 
-        .session-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 12px;
+        .session-icon.rag {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .session-info {
+            flex: 1;
+            min-width: 0;
         }
 
         .session-name {
-            font-size: 18px;
-            font-weight: 600;
+            font-weight: 500;
             color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-
-        .session-description {
-            color: var(--text-secondary);
-            font-size: 14px;
-            line-height: 1.4;
-            margin-bottom: 12px;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .session-meta {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 16px;
-            font-size: 12px;
+            gap: 1rem;
+            font-size: 0.75rem;
             color: var(--text-secondary);
         }
 
-        .session-stats {
-            display: flex;
-            gap: 16px;
-        }
-
-        .session-date {
-            margin-left: auto;
+        .session-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.125rem 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            font-size: 0.625rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .session-actions {
-            position: absolute;
-            top: 16px;
-            right: 16px;
+            display: flex;
+            gap: 0.5rem;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.2s;
         }
 
         .session-card:hover .session-actions {
             opacity: 1;
         }
 
-        .action-btn {
-            background: none;
+        .session-action-btn {
+            width: 32px;
+            height: 32px;
             border: none;
-            padding: 6px;
-            border-radius: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            transition: all 0.2s;
             color: var(--text-secondary);
-            transition: all 0.3s ease;
         }
 
-        .action-btn:hover {
-            background: var(--secondary);
+        .session-action-btn:hover {
+            background: var(--gray-200);
             color: var(--text-primary);
         }
 
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            /* Remove overflow to prevent sidebar scrolling */
-        }
-
-        .stats-card {
-            background: var(--sidebar-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .stats-grid {
-            display: grid;
-            gap: 16px;
-        }
-
-        .stat-item {
+        .empty-state {
             text-align: center;
-            padding: 16px;
-            background: white;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 4px;
-        }
-
-        .stat-label {
-            font-size: 12px;
+            padding: 3rem 1rem;
             color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .features-card {
-            background: var(--sidebar-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
         }
 
-        .features-list {
-            list-style: none;
+        /* AI Capabilities */
+        .capabilities-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .capability-item {
             display: flex;
-            flex-direction: column;
-            gap: 12px;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.2s;
         }
 
-        .features-list li {
+        .capability-item:hover {
+            background: var(--bg-primary);
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow);
+        }
+
+        .capability-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 14px;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .capability-icon.chat {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+        }
+
+        .capability-icon.calendar {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .capability-icon.search {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .capability-icon.docs {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .capability-icon.calc {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .capability-content {
+            flex: 1;
+        }
+
+        .capability-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .capability-desc {
+            font-size: 0.875rem;
             color: var(--text-secondary);
+            line-height: 1.5;
         }
 
-        .features-list i {
-            width: 18px;
-            height: 18px;
-            color: var(--accent);
-        }
-
-        /* Modal Styles */
+        /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
+            padding: 1rem;
         }
 
         .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
+            display: flex;
         }
 
         .modal {
-            background: white;
+            background: var(--bg-primary);
             border-radius: 20px;
-            padding: 32px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
+            padding: 2rem;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
-        .modal-overlay.active .modal {
-            transform: scale(1);
+        .modal-header {
+            margin-bottom: 1.5rem;
         }
 
         .modal-title {
-            font-size: 24px;
+            font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 8px;
             color: var(--text-primary);
+            margin-bottom: 0.5rem;
         }
 
         .modal-subtitle {
             color: var(--text-secondary);
-            margin-bottom: 24px;
+            font-size: 0.875rem;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.5rem;
         }
 
         .form-label {
             display: block;
-            font-size: 14px;
+            font-size: 0.875rem;
             font-weight: 500;
-            margin-bottom: 8px;
             color: var(--text-primary);
+            margin-bottom: 0.5rem;
         }
 
-        .form-input {
+        .form-input,
+        .form-textarea {
             width: 100%;
-            padding: 12px 16px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            font-size: 16px;
-            outline: none;
-            transition: border-color 0.3s ease;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-family: inherit;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.2s;
         }
 
-        .form-input:focus {
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
             border-color: var(--primary);
+            background: var(--bg-primary);
+            box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.1);
         }
 
         .form-textarea {
@@ -416,327 +579,363 @@
             min-height: 100px;
         }
 
+        /* Session Type Selector */
+        .session-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .session-type-option {
+            position: relative;
+        }
+
+        .session-type-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .session-type-option label {
+            display: block;
+            padding: 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .session-type-option input[type="radio"]:checked + label {
+            border-color: var(--primary);
+            background: rgba(100, 116, 139, 0.05);
+        }
+
+        .session-type-option:hover label {
+            border-color: var(--primary-light);
+            background: rgba(100, 116, 139, 0.02);
+        }
+
+        .session-type-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .session-type-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .session-type-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
         .modal-actions {
             display: flex;
-            gap: 12px;
+            gap: 1rem;
             justify-content: flex-end;
-            margin-top: 24px;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .header {
+            .header-content {
                 flex-direction: column;
-                gap: 16px;
-                text-align: center;
+                gap: 1rem;
             }
-            
-            .sessions-grid {
+
+            .main-container {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .session-type-selector {
                 grid-template-columns: 1fr;
             }
-        }
 
-        /* Custom Scrollbars */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(113, 128, 150, 0.3);
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(113, 128, 150, 0.5);
-        }
-
-        /* File Upload Styles */
-        .file-upload-area {
-            border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 32px 24px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 16px;
-        }
-
-        .file-upload-area:hover {
-            border-color: var(--primary);
-            background: rgba(49, 130, 206, 0.05);
-        }
-
-        .file-upload-area.dragover {
-            border-color: var(--primary);
-            background: rgba(49, 130, 206, 0.1);
-        }
-
-        .file-list {
-            margin-top: 16px;
-        }
-
-        .file-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            background: var(--secondary);
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
-
-        .file-name {
-            font-size: 14px;
-            color: var(--text-primary);
-        }
-
-        .file-size {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-left: 8px;
-        }
-
-        .file-remove {
-            background: none;
-            border: none;
-            color: var(--error);
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-        }
-
-        .file-remove:hover {
-            background: rgba(245, 101, 101, 0.1);
-        }
-
-        /* Progress Bar */
-        .progress-container {
-            margin: 16px 0;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: var(--secondary);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--primary);
-            transition: width 0.3s ease;
-            border-radius: 4px;
-        }
-
-        .progress-text {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-top: 8px;
-            text-align: center;
-        }
-
-        /* KB Status Styles */
-        .kb-status-good {
-            border-color: var(--success) !important;
-            background: rgba(72, 187, 120, 0.1) !important;
-        }
-
-        .kb-status-empty {
-            border-color: var(--warning) !important;
-            background: rgba(236, 201, 75, 0.1) !important;
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <div class="header">
-            <div class="user-info">
-                <div class="user-avatar">{{ user.username[0].upper() }}</div>
-                <div class="user-details">
-                    <h2>Welcome back, {{ user.username }}!</h2>
-                    <div class="user-stats">
-                        {{ user.session_count }} sessions • {{ user.total_messages }} messages • 
-                        Member since {{ user.created_at.strftime('%B %Y') }}
-                    </div>
+    <div class="dashboard-wrapper">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">🤖</div>
+                    <span>AI Assistant</span>
                 </div>
-            </div>
-            <div class="header-actions">
-                <button class="btn btn-primary" onclick="showNewSessionModal()">
-                    <i data-lucide="plus">➕</i>
-                    New Session
-                </button>
-                <form method="post" action="/logout" style="display: inline;">
-                    <button type="submit" class="btn btn-secondary">
-                        <i data-lucide="log-out">🚪</i>
+                <div class="header-actions">
+                    <div class="user-menu">
+                        <div class="user-avatar">{{ current_user.username[0].upper() }}</div>
+                        <span class="user-name">{{ current_user.username }}</span>
+                        <i data-lucide="chevron-down" style="width: 16px; height: 16px;"></i>
+                    </div>
+                    <button class="btn btn-outline" onclick="logout()">
+                        <i data-lucide="log-out"></i>
                         Logout
                     </button>
-                </form>
-            </div>
-        </div>
-
-        <div class="main-content">
-            <div class="sessions-section">
-                <div class="section-header">
-                    <h3 class="section-title">Your AI Sessions</h3>
-                    <span style="color: var(--text-secondary); font-size: 14px;">
-                        {{ sessions|length }} session{{ 's' if sessions|length != 1 else '' }}
-                    </span>
                 </div>
+            </div>
+        </header>
 
-                <div class="sessions-grid">
-                    {% if sessions %}
-                        {% for session in sessions %}
-                        <div class="session-card" onclick="openSession('{{ session._id }}')">
-                            <div class="session-actions">
-                                <button class="action-btn" onclick="event.stopPropagation(); editSession('{{ session._id }}', '{{ session.name }}', '{{ session.description or '' }}')" title="Edit session">
-                                    <i data-lucide="edit-2" style="width: 16px; height: 16px;">✏️</i>
-                                </button>
-                                <button class="action-btn" onclick="event.stopPropagation(); deleteSession('{{ session._id }}')" title="Delete session">
-                                    <i data-lucide="trash-2" style="width: 16px; height: 16px;">🗑️</i>
-                                </button>
-                            </div>
-                            <div class="session-header">
-                                <div>
+        <!-- Main Content -->
+        <main class="main-container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">Welcome back, {{ current_user.username }}!</h1>
+                <p class="page-subtitle">Choose a session or create a new one to get started</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-sessions">{{ sessions|length if sessions else 0 }}</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="ai-sessions">0</div>
+                    <div class="stat-label">Agentic AI Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="rag-sessions">0</div>
+                    <div class="stat-label">Agentic RAG Sessions</div>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="dashboard-grid">
+                <!-- Sessions Section -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i data-lucide="message-circle" class="section-title-icon"></i>
+                            Your Sessions
+                        </div>
+                        <button class="btn btn-primary" onclick="showSessionModal()">
+                            <i data-lucide="plus"></i>
+                            New Session
+                        </button>
+                    </div>
+                    <div class="sessions-container" id="sessions-container">
+                        {% if sessions and sessions|length > 0 %}
+                            {% for session in sessions %}
+                            <div class="session-card" onclick="openSession('{{ session._id }}')">
+                                <div class="session-icon {{ session.session_type or 'ai' }}">
+                                    {% if session.session_type == 'rag' %}📚{% else %}🤖{% endif %}
+                                </div>
+                                <div class="session-info">
                                     <div class="session-name">{{ session.name }}</div>
-                                    {% if session.description %}
-                                    <div class="session-description">{{ session.description }}</div>
-                                    {% endif %}
+                                    <div class="session-meta">
+                                        <span class="session-badge">
+                                            {% if session.session_type == 'rag' %}Agentic RAG{% else %}Agentic AI{% endif %}
+                                        </span>
+                                        <span>{{ session.created_at[:10] if session.created_at else 'Today' }}</span>
+                                    </div>
+                                </div>
+                                <div class="session-actions">
+                                    <button class="session-action-btn" onclick="event.stopPropagation(); editSession('{{ session._id }}', '{{ session.name }}', '{{ session.description or '' }}');" title="Edit">
+                                        <i data-lucide="edit-2" style="width: 16px; height: 16px;"></i>
+                                    </button>
+                                    <button class="session-action-btn" onclick="event.stopPropagation(); deleteSession('{{ session._id }}');" title="Delete">
+                                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="session-meta">
-                                <div class="session-stats">
-                                    <span>{{ session.message_count }} messages</span>
-                                    <span>{{ session.tools_used }} tools used</span>
-                                </div>
-                                <div class="session-date">
-                                    {{ session.last_active.strftime('%m/%d/%Y') }}
-                                </div>
+                            {% endfor %}
+                        {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon">💬</div>
+                            <h3 style="margin-bottom: 0.5rem; color: var(--text-primary);">No sessions yet</h3>
+                            <p style="margin-bottom: 1.5rem;">Create your first session to start chatting with AI</p>
+                            <button class="btn btn-primary" onclick="showSessionModal()">
+                                <i data-lucide="plus"></i>
+                                Create Session
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- AI Capabilities Section -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i data-lucide="sparkles" class="section-title-icon"></i>
+                            AI Capabilities
+                        </div>
+                    </div>
+                    <div class="capabilities-grid">
+                        <div class="capability-item">
+                            <div class="capability-icon chat">💬</div>
+                            <div class="capability-content">
+                                <div class="capability-title">Conversational AI</div>
+                                <div class="capability-desc">Natural language conversations with context awareness and memory</div>
                             </div>
                         </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="session-card empty" onclick="showNewSessionModal()">
-                            <i data-lucide="plus-circle" style="width: 32px; height: 32px; margin-bottom: 12px;">➕</i>
-                            <div style="font-size: 16px; font-weight: 500; margin-bottom: 4px;">Create Your First Session</div>
-                            <div style="font-size: 14px;">Start a conversation with your AI assistant</div>
+                        <div class="capability-item">
+                            <div class="capability-icon calendar">📅</div>
+                            <div class="capability-content">
+                                <div class="capability-title">Calendar & Meet</div>
+                                <div class="capability-desc">Schedule meetings, manage calendar events with Google Calendar integration</div>
+                            </div>
                         </div>
-                    {% endif %}
+                        <div class="capability-item">
+                            <div class="capability-icon search">🔍</div>
+                            <div class="capability-content">
+                                <div class="capability-title">Web Search</div>
+                                <div class="capability-desc">Real-time web search, news, and Wikipedia access for current information</div>
+                            </div>
+                        </div>
+                        <div class="capability-item">
+                            <div class="capability-icon docs">📚</div>
+                            <div class="capability-content">
+                                <div class="capability-title">Document Q&A</div>
+                                <div class="capability-desc">Upload documents and ask questions with intelligent retrieval</div>
+                            </div>
+                        </div>
+                        <div class="capability-item">
+                            <div class="capability-icon calc">🧮</div>
+                            <div class="capability-content">
+                                <div class="capability-title">Calculations</div>
+                                <div class="capability-desc">Math calculations, unit conversions, and date/time operations</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="sidebar">
-                <div class="stats-card">
-                    <h4 style="margin-bottom: 16px; color: var(--text-primary);">Your Stats</h4>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value">{{ user.session_count }}</div>
-                            <div class="stat-label">Sessions</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">{{ user.total_messages }}</div>
-                            <div class="stat-label">Messages</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-value">{{ ((now() - user.created_at).days) }}</div>
-                            <div class="stat-label">Days Active</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="features-card">
-                    <h4 style="margin-bottom: 16px; color: var(--text-primary);">Knowledge Base</h4>
-                    <div id="kb-info" style="margin-bottom: 16px;">
-                        <div class="kb-status" style="padding: 12px; background: white; border-radius: 8px; border: 1px solid var(--border);">
-                            <div style="font-size: 14px; color: var(--text-secondary);">Loading...</div>
-                        </div>
-                    </div>
-                    
-                    <div class="kb-actions" style="display: flex; flex-direction: column; gap: 8px;">
-                        <button class="btn btn-primary" onclick="showKBUploadModal()" style="width: 100%; justify-content: center;">
-                            <i data-lucide="upload">📤</i>
-                            Upload PDFs
-                        </button>
-                        <button class="btn btn-secondary" onclick="clearKnowledgeBase()" style="width: 100%; justify-content: center;">
-                            <i data-lucide="trash-2">🗑️</i>
-                            Clear KB
-                        </button>
-                    </div>
-                </div>
-
-                <div class="features-card">
-                    <h4 style="margin-bottom: 16px; color: var(--text-primary);">AI Capabilities</h4>
-                    <ul class="features-list">
-                        <li>
-                            <i data-lucide="brain">🧠</i>
-                            Multi-agent workflow
-                        </li>
-                        <li>
-                            <i data-lucide="search">🔍</i>
-                            Document retrieval
-                        </li>
-                        <li>
-                            <i data-lucide="globe">🌐</i>
-                            Wikipedia integration
-                        </li>
-                        <li>
-                            <i data-lucide="database">💾</i>
-                            Memory context
-                        </li>
-                        <li>
-                            <i data-lucide="zap">⚡</i>
-                            Real-time responses
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+        </main>
     </div>
 
     <!-- New Session Modal -->
     <div class="modal-overlay" id="session-modal">
         <div class="modal">
-            <h3 class="modal-title">Create New Session</h3>
-            <p class="modal-subtitle">Start a new conversation with your AI assistant</p>
-            
+            <div class="modal-header">
+                <h3 class="modal-title">Create New Session</h3>
+                <p class="modal-subtitle">Choose your session type and start chatting</p>
+            </div>
+
             <form id="session-form">
                 <div class="form-group">
+                    <label class="form-label">Session Type</label>
+                    <div class="session-type-selector">
+                        <div class="session-type-option" onclick="selectSessionType('ai')">
+                            <input type="radio" name="session-type" id="type-ai" value="ai" checked>
+                            <label for="type-ai">
+                                <div class="session-type-icon">🤖</div>
+                                <div class="session-type-title">Agentic AI</div>
+                                <div class="session-type-desc">General chat with tools (Calendar, Web Search, Calculator, Wikipedia)</div>
+                            </label>
+                        </div>
+                        <div class="session-type-option" onclick="selectSessionType('rag')">
+                            <input type="radio" name="session-type" id="type-rag" value="rag">
+                            <label for="type-rag">
+                                <div class="session-type-icon">📚</div>
+                                <div class="session-type-title">Agentic RAG</div>
+                                <div class="session-type-desc">Document Q&A with knowledge base and file uploads</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RAG Mode Selector (shown only when Agentic RAG is selected) -->
+                <div class="form-group" id="rag-mode-group" style="display: none;">
+                    <label class="form-label">Knowledge Base Mode</label>
+                    <div class="session-type-selector">
+                        <div class="session-type-option" onclick="selectRagMode('specific_files')">
+                            <input type="radio" name="rag-mode" id="rag-specific" value="specific_files" checked>
+                            <label for="rag-specific">
+                                <div class="session-type-icon">📁</div>
+                                <div class="session-type-title">Specific Files</div>
+                                <div class="session-type-desc">Isolated KB per session. Files uploaded here stay private to this session only.</div>
+                            </label>
+                        </div>
+                        <div class="session-type-option" onclick="selectRagMode('unified_kb')">
+                            <input type="radio" name="rag-mode" id="rag-unified" value="unified_kb">
+                            <label for="rag-unified">
+                                <div class="session-type-icon">🗄️</div>
+                                <div class="session-type-title">Unified KB</div>
+                                <div class="session-type-desc">Shared knowledge base. All files are added to a central, unified database.</div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label" for="session-name">Session Name</label>
-                    <input 
-                        type="text" 
-                        id="session-name" 
-                        class="form-input" 
-                        placeholder="e.g., AI Research Discussion, Code Review, Writing Help"
+                    <input
+                        type="text"
+                        id="session-name"
+                        class="form-input"
+                        placeholder="e.g., Project Planning, Research Session"
                         required
                         maxlength="100"
                     >
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label" for="session-description">Description (Optional)</label>
-                    <textarea 
-                        id="session-description" 
-                        class="form-input form-textarea" 
+                    <textarea
+                        id="session-description"
+                        class="form-textarea"
                         placeholder="Describe what you'd like to discuss in this session..."
                         maxlength="500"
                     ></textarea>
                 </div>
-                
+
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="hideSessionModal()">
                         Cancel
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        <i data-lucide="message-circle">💬</i>
-                        Start Session
+                        <i data-lucide="arrow-right"></i>
+                        Create Session
                     </button>
                 </div>
             </form>
@@ -746,39 +945,39 @@
     <!-- Edit Session Modal -->
     <div class="modal-overlay" id="edit-session-modal">
         <div class="modal">
-            <h3 class="modal-title">Edit Session</h3>
-            <p class="modal-subtitle">Update your session details</p>
-            
+            <div class="modal-header">
+                <h3 class="modal-title">Edit Session</h3>
+                <p class="modal-subtitle">Update your session details</p>
+            </div>
+
             <form id="edit-session-form">
                 <input type="hidden" id="edit-session-id">
                 <div class="form-group">
                     <label class="form-label" for="edit-session-name">Session Name</label>
-                    <input 
-                        type="text" 
-                        id="edit-session-name" 
-                        class="form-input" 
-                        placeholder="e.g., AI Research Discussion, Code Review, Writing Help"
+                    <input
+                        type="text"
+                        id="edit-session-name"
+                        class="form-input"
                         required
                         maxlength="100"
                     >
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label" for="edit-session-description">Description (Optional)</label>
-                    <textarea 
-                        id="edit-session-description" 
-                        class="form-input form-textarea" 
-                        placeholder="Describe what you'd like to discuss in this session..."
+                    <textarea
+                        id="edit-session-description"
+                        class="form-textarea"
                         maxlength="500"
                     ></textarea>
                 </div>
-                
+
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="hideEditSessionModal()">
                         Cancel
                     </button>
                     <button type="submit" class="btn btn-primary">
-                        <i data-lucide="save">💾</i>
+                        <i data-lucide="save"></i>
                         Save Changes
                     </button>
                 </div>
@@ -786,340 +985,31 @@
         </div>
     </div>
 
-    <!-- Knowledge Base Upload Modal -->
-    <div class="modal-overlay" id="kb-upload-modal">
-        <div class="modal" style="max-width: 600px;">
-            <h3 class="modal-title">Upload PDF Documents</h3>
-            <p class="modal-subtitle">Build your knowledge base by uploading PDF files (max 10 files, 50MB each)</p>
-            
-            <div class="file-upload-area" onclick="document.getElementById('pdf-files').click()" 
-                 ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
-                <i data-lucide="upload-cloud" style="width: 48px; height: 48px; color: var(--text-secondary); margin-bottom: 16px;">☁️📤</i>
-                <div style="font-size: 16px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">
-                    Drop PDF files here or click to browse
-                </div>
-                <div style="font-size: 14px; color: var(--text-secondary);">
-                    Supports multiple files • Maximum 50MB per file
-                </div>
-                <input type="file" id="pdf-files" accept=".pdf" multiple style="display: none;" onchange="handleFileSelect(event)">
-            </div>
-            
-            <div id="file-list" class="file-list" style="display: none;"></div>
-            
-            <div id="upload-progress" class="progress-container" style="display: none;">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
-                </div>
-                <div class="progress-text" id="progress-text">Preparing upload...</div>
-            </div>
-            
-            <div class="modal-actions">
-                <button type="button" class="btn btn-secondary" onclick="hideKBUploadModal()">
-                    Cancel
-                </button>
-                <button type="button" class="btn btn-primary" id="upload-btn" onclick="startUpload()" disabled>
-                    <i data-lucide="upload">📤</i>
-                    Build Knowledge Base
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Global variables for KB functionality
-        let selectedFiles = [];
-        let currentTaskId = null;
+        // Initialize Lucide icons
+        lucide.createIcons();
 
-        // Wait for DOM and Lucide to load before initializing
-        document.addEventListener('DOMContentLoaded', function() {
-            // Check if lucide is loaded, if not wait for it
-            function initializeLucide() {
-                if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    console.log('Initializing Lucide icons...');
-                    lucide.createIcons();
-                    console.log('Lucide icons initialized');
+        // Calculate stats
+        function calculateStats() {
+            const sessions = {{ sessions|tojson if sessions else [] }};
+            let aiCount = 0;
+            let ragCount = 0;
+
+            sessions.forEach(session => {
+                if (session.session_type === 'rag') {
+                    ragCount++;
                 } else {
-                    console.log('Waiting for Lucide to load...');
-                    setTimeout(initializeLucide, 100);
+                    aiCount++;
                 }
-            }
-            initializeLucide();
-            
-            // Also try to re-initialize icons when new content is added
-            setTimeout(() => {
-                if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    lucide.createIcons();
-                }
-            }, 1000);
+            });
 
-            // Load KB info on page load
-            loadKBInfo();
-        });
-
-        // Knowledge Base Functions
-        async function loadKBInfo() {
-            try {
-                const response = await fetch('/api/kb/info');
-                if (response.ok) {
-                    const info = await response.json();
-                    updateKBStatus(info);
-                } else {
-                    document.getElementById('kb-info').innerHTML = 
-                        '<div class="kb-status kb-status-empty"><div style="font-size: 14px; color: var(--text-secondary);">Failed to load KB info</div></div>';
-                }
-            } catch (error) {
-                console.error('Error loading KB info:', error);
-                document.getElementById('kb-info').innerHTML = 
-                    '<div class="kb-status kb-status-empty"><div style="font-size: 14px; color: var(--text-secondary);">Error loading KB info</div></div>';
-            }
+            document.getElementById('ai-sessions').textContent = aiCount;
+            document.getElementById('rag-sessions').textContent = ragCount;
         }
 
-        function updateKBStatus(info) {
-            const kbInfo = document.getElementById('kb-info');
-            if (info.has_knowledge_base) {
-                kbInfo.innerHTML = `
-                    <div class="kb-status kb-status-good">
-                        <div style="font-size: 14px; font-weight: 500; color: var(--success); margin-bottom: 4px;">✅ Knowledge Base Ready</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">
-                            ${info.text_index_exists ? 'Text index ✓' : ''} 
-                            ${info.image_index_exists ? 'Image index ✓' : ''}
-                        </div>
-                    </div>
-                `;
-            } else {
-                kbInfo.innerHTML = `
-                    <div class="kb-status kb-status-empty">
-                        <div style="font-size: 14px; font-weight: 500; color: var(--warning); margin-bottom: 4px;">⚠️ No Knowledge Base</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">Upload PDFs to create your knowledge base</div>
-                    </div>
-                `;
-            }
-        }
-
-        function showKBUploadModal() {
-            document.getElementById('kb-upload-modal').classList.add('active');
-            selectedFiles = [];
-            updateFileList();
-            resetProgress();
-            setTimeout(() => {
-                if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    lucide.createIcons();
-                }
-            }, 50);
-        }
-
-        function hideKBUploadModal() {
-            document.getElementById('kb-upload-modal').classList.remove('active');
-            selectedFiles = [];
-            updateFileList();
-            resetProgress();
-            if (currentTaskId) {
-                currentTaskId = null;
-            }
-        }
-
-        // File handling functions
-        function handleFileSelect(event) {
-            const files = Array.from(event.target.files);
-            addFilesToSelection(files);
-        }
-
-        function handleDrop(event) {
-            event.preventDefault();
-            event.currentTarget.classList.remove('dragover');
-            const files = Array.from(event.dataTransfer.files).filter(file => file.type === 'application/pdf');
-            addFilesToSelection(files);
-        }
-
-        function handleDragOver(event) {
-            event.preventDefault();
-            event.currentTarget.classList.add('dragover');
-        }
-
-        function handleDragLeave(event) {
-            event.currentTarget.classList.remove('dragover');
-        }
-
-        function addFilesToSelection(files) {
-            for (const file of files) {
-                if (file.type !== 'application/pdf') {
-                    alert(`${file.name} is not a PDF file`);
-                    continue;
-                }
-                if (file.size > 50 * 1024 * 1024) {
-                    alert(`${file.name} is too large (max 50MB)`);
-                    continue;
-                }
-                if (selectedFiles.length >= 10) {
-                    alert('Maximum 10 files allowed');
-                    break;
-                }
-                if (selectedFiles.some(f => f.name === file.name)) {
-                    continue; // Skip duplicates
-                }
-                selectedFiles.push(file);
-            }
-            updateFileList();
-        }
-
-        function updateFileList() {
-            const fileList = document.getElementById('file-list');
-            const uploadBtn = document.getElementById('upload-btn');
-            
-            if (selectedFiles.length === 0) {
-                fileList.style.display = 'none';
-                uploadBtn.disabled = true;
-                return;
-            }
-            
-            fileList.style.display = 'block';
-            uploadBtn.disabled = false;
-            
-            fileList.innerHTML = selectedFiles.map((file, index) => `
-                <div class="file-item">
-                    <div>
-                        <span class="file-name">${file.name}</span>
-                        <span class="file-size">(${formatFileSize(file.size)})</span>
-                    </div>
-                    <button class="file-remove" onclick="removeFile(${index})" title="Remove file">
-                        ✕
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            updateFileList();
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-        }
-
-        // Upload and progress functions
-        async function startUpload() {
-            if (selectedFiles.length === 0) return;
-            
-            const uploadBtn = document.getElementById('upload-btn');
-            uploadBtn.disabled = true;
-            uploadBtn.innerHTML = '<i data-lucide="loader" style="animation: spin 1s linear infinite;">⏳</i> Uploading...';
-            
-            showProgress();
-            
-            try {
-                const formData = new FormData();
-                selectedFiles.forEach(file => {
-                    formData.append('files', file);
-                });
-                
-                updateProgress(10, 'Uploading files...');
-                
-                const response = await fetch('/api/kb/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    const result = await response.json();
-                    currentTaskId = result.task_id;
-                    updateProgress(20, 'Upload complete. Processing...');
-                    
-                    // Start polling for progress
-                    pollProgress();
-                } else {
-                    const error = await response.text();
-                    throw new Error(error);
-                }
-            } catch (error) {
-                console.error('Upload error:', error);
-                updateProgress(0, `Upload failed: ${error.message}`);
-                uploadBtn.disabled = false;
-                uploadBtn.innerHTML = '<i data-lucide="upload">📤</i> Build Knowledge Base';
-            }
-        }
-
-        async function pollProgress() {
-            if (!currentTaskId) return;
-            
-            try {
-                const response = await fetch(`/api/kb/status/${currentTaskId}`);
-                if (response.ok) {
-                    const status = await response.json();
-                    updateProgress(status.progress, status.message);
-                    
-                    if (status.status === 'completed') {
-                        setTimeout(() => {
-                            hideKBUploadModal();
-                            loadKBInfo(); // Refresh KB status
-                            alert('Knowledge base created successfully!');
-                        }, 1000);
-                    } else if (status.status === 'error') {
-                        updateProgress(0, status.message);
-                        document.getElementById('upload-btn').disabled = false;
-                        document.getElementById('upload-btn').innerHTML = '<i data-lucide="upload">📤</i> Build Knowledge Base';
-                    } else {
-                        // Continue polling
-                        setTimeout(pollProgress, 2000);
-                    }
-                } else {
-                    throw new Error('Failed to get status');
-                }
-            } catch (error) {
-                console.error('Status polling error:', error);
-                updateProgress(0, `Status check failed: ${error.message}`);
-            }
-        }
-
-        function showProgress() {
-            document.getElementById('upload-progress').style.display = 'block';
-        }
-
-        function resetProgress() {
-            document.getElementById('upload-progress').style.display = 'none';
-            document.getElementById('progress-fill').style.width = '0%';
-            document.getElementById('progress-text').textContent = 'Preparing upload...';
-        }
-
-        function updateProgress(percentage, message) {
-            document.getElementById('progress-fill').style.width = percentage + '%';
-            document.getElementById('progress-text').textContent = message;
-        }
-
-        async function clearKnowledgeBase() {
-            if (!confirm('Are you sure you want to clear the knowledge base? This will delete all indices and cannot be undone.')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch('/api/kb/clear', {
-                    method: 'DELETE'
-                });
-                
-                if (response.ok) {
-                    loadKBInfo(); // Refresh KB status
-                    alert('Knowledge base cleared successfully');
-                } else {
-                    alert('Failed to clear knowledge base');
-                }
-            } catch (error) {
-                console.error('Error clearing KB:', error);
-                alert('Error clearing knowledge base');
-            }
-        }
-
-        // Session Management
-        function showNewSessionModal() {
+        // Modal functions
+        function showSessionModal() {
             document.getElementById('session-modal').classList.add('active');
-            document.getElementById('session-name').focus();
-            // Re-initialize icons in modal
-            setTimeout(() => {
-                if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    lucide.createIcons();
-                }
-            }, 50);
         }
 
         function hideSessionModal() {
@@ -1127,78 +1017,79 @@
             document.getElementById('session-form').reset();
         }
 
-        function editSession(sessionId, sessionName, sessionDescription) {
-            document.getElementById('edit-session-id').value = sessionId;
-            document.getElementById('edit-session-name').value = sessionName;
-            document.getElementById('edit-session-description').value = sessionDescription;
+        function showEditSessionModal() {
             document.getElementById('edit-session-modal').classList.add('active');
-            document.getElementById('edit-session-name').focus();
-            // Re-initialize icons in modal
-            setTimeout(() => {
-                if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                    lucide.createIcons();
-                }
-            }, 50);
         }
 
         function hideEditSessionModal() {
             document.getElementById('edit-session-modal').classList.remove('active');
-            document.getElementById('edit-session-form').reset();
         }
 
+        // Session type selection
+        function selectSessionType(type) {
+            document.getElementById(`type-${type}`).checked = true;
+
+            // Show/hide RAG mode selector
+            const ragModeGroup = document.getElementById('rag-mode-group');
+            if (type === 'rag') {
+                ragModeGroup.style.display = 'block';
+            } else {
+                ragModeGroup.style.display = 'none';
+            }
+        }
+
+        // RAG mode selection
+        function selectRagMode(mode) {
+            document.getElementById(`rag-${mode === 'specific_files' ? 'specific' : 'unified'}`).checked = true;
+        }
+
+        // Open session
         function openSession(sessionId) {
             window.location.href = `/chat/${sessionId}`;
         }
 
-        async function deleteSession(sessionId) {
-            if (!confirm('Are you sure you want to delete this session? This action cannot be undone.')) {
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/sessions/${sessionId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    // Reload page to refresh session list
-                    window.location.reload();
-                } else {
-                    alert('Failed to delete session. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error deleting session:', error);
-                alert('Failed to delete session. Please try again.');
-            }
-        }
-
-        // Create new session
+        // Create session
         document.getElementById('session-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const name = document.getElementById('session-name').value.trim();
             const description = document.getElementById('session-description').value.trim();
-            
+            const sessionType = document.querySelector('input[name="session-type"]:checked').value;
+
+            // Get RAG mode if RAG session type is selected
+            let ragMode = null;
+            if (sessionType === 'rag') {
+                const ragModeElement = document.querySelector('input[name="rag-mode"]:checked');
+                ragMode = ragModeElement ? ragModeElement.value : 'unified_kb';
+            }
+
             if (!name) {
                 alert('Please enter a session name.');
                 return;
             }
 
             try {
+                const requestBody = {
+                    name: name,
+                    description: description || null,
+                    session_type: sessionType
+                };
+
+                // Only include rag_mode for RAG sessions
+                if (sessionType === 'rag') {
+                    requestBody.rag_mode = ragMode;
+                }
+
                 const response = await fetch('/api/sessions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        name: name,
-                        description: description || null
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (response.ok) {
                     const result = await response.json();
-                    // Redirect to new session
                     window.location.href = `/chat/${result.id}`;
                 } else {
                     alert('Failed to create session. Please try again.');
@@ -1210,17 +1101,19 @@
         });
 
         // Edit session
+        function editSession(id, name, description) {
+            document.getElementById('edit-session-id').value = id;
+            document.getElementById('edit-session-name').value = name;
+            document.getElementById('edit-session-description').value = description;
+            showEditSessionModal();
+        }
+
         document.getElementById('edit-session-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const sessionId = document.getElementById('edit-session-id').value;
             const name = document.getElementById('edit-session-name').value.trim();
             const description = document.getElementById('edit-session-description').value.trim();
-            
-            if (!name) {
-                alert('Please enter a session name.');
-                return;
-            }
 
             try {
                 const response = await fetch(`/api/sessions/${sessionId}`, {
@@ -1235,62 +1128,54 @@
                 });
 
                 if (response.ok) {
-                    hideEditSessionModal();
-                    // Reload page to refresh session list
-                    window.location.reload();
+                    location.reload();
                 } else {
-                    alert('Failed to update session. Please try again.');
+                    alert('Failed to update session.');
                 }
             } catch (error) {
                 console.error('Error updating session:', error);
-                alert('Failed to update session. Please try again.');
+                alert('Failed to update session.');
             }
         });
+
+        // Delete session
+        async function deleteSession(sessionId) {
+            if (!confirm('Are you sure you want to delete this session?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/sessions/${sessionId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Failed to delete session.');
+                }
+            } catch (error) {
+                console.error('Error deleting session:', error);
+                alert('Failed to delete session.');
+            }
+        }
+
+        // Logout
+        function logout() {
+            window.location.href = '/logout';
+        }
 
         // Close modal on outside click
-        document.getElementById('session-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideSessionModal();
-            }
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
         });
 
-        document.getElementById('edit-session-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideEditSessionModal();
-            }
-        });
-
-        document.getElementById('kb-upload-modal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                hideKBUploadModal();
-            }
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Escape to close modal
-            if (e.key === 'Escape') {
-                hideSessionModal();
-                hideEditSessionModal();
-                hideKBUploadModal();
-            }
-            
-            // Ctrl/Cmd + N for new session
-            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-                e.preventDefault();
-                showNewSessionModal();
-            }
-        });
-
-        // Auto-refresh session list every 2 minutes
-        setInterval(() => {
-            // Only refresh if no modal is open
-            if (!document.getElementById('session-modal').classList.contains('active') && 
-                !document.getElementById('edit-session-modal').classList.contains('active') &&
-                !document.getElementById('kb-upload-modal').classList.contains('active')) {
-                window.location.reload();
-            }
-        }, 60000*2);
+        // Initialize
+        calculateStats();
     </script>
 </body>
 </html>

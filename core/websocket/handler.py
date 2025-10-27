@@ -65,7 +65,11 @@ async def handle_websocket_connection(websocket: WebSocket, session_id: str, app
             return
         
         print(f"✅ Session verified: {session.get('name', 'Unknown')}")
-        
+
+        # Get session type from database
+        session_type = session.get("session_type", "ai")
+        print(f"📊 Session type from database: {session_type}")
+
         # Register WebSocket with unique key to prevent collisions
         websocket_key = f"{user_id}:{session_id}"
         app.state.multi_agent_manager.active_websockets[websocket_key] = websocket
@@ -87,7 +91,16 @@ async def handle_websocket_connection(websocket: WebSocket, session_id: str, app
             
             if message_data.get("type") == "chat_message":
                 user_message = message_data.get("message", "")
-                chat_mode = message_data.get("mode", "general")  # Default to general
+
+                # Use session type from database (most reliable source)
+                # Map session types: "rag" -> "rag", "ai" -> "general"
+                if session_type == "rag":
+                    chat_mode = "rag"
+                else:
+                    chat_mode = "general"
+
+                print(f"📝 Session type from DB: {session_type}")
+                print(f"📝 Using chat_mode: {chat_mode}")
                 
                 if user_message.strip():
                     try:

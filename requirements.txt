@@ -1,28 +1,68 @@
-paddlepaddle
-pdfplumber
-pypdf2
-pymupdf
-paddleocr
-pillow==11.3.0
-setuptools
-faiss-cpu 
-pillow
-cohere
-pdf2image
+# ===================================
+# CORE RAG DEPENDENCIES
+# ===================================
+
+# PDF Text Extraction
+pypdf>=4.0.0
+
+# Local Embeddings (FREE, no API costs)
+sentence-transformers>=2.2.0
+torch>=2.0.0
+
+# Vector Database (ChromaDB - simple, persistent)
+chromadb>=0.4.0
+
+# LLM APIs
+openai
 google-genai
+
+# Core utilities
+numpy
 python-dotenv
+
+# ===================================
+# MULTI-AGENT SYSTEM (LangGraph)
+# ===================================
 langchain
+langchain-core
 langchain-community
 langgraph
-qdrant-client
-langchain-qdrant
-pymongo
-wikipedia
+
+# ===================================
+# WEB API (FastAPI Server)
+# ===================================
 fastapi
 uvicorn[standard]
 python-multipart
+jinja2
+
+# ===================================
+# DATABASE & MEMORY
+# ===================================
+pymongo
+motor
+
+# ===================================
+# EXTERNAL TOOLS
+# ===================================
+wikipedia
+
+# Web search (Serper API)
+requests
+
+# Date parsing
+python-dateutil
+
+# ===================================
+# AUTHENTICATION & SECURITY
+# ===================================
 email-validator
 pyjwt
 bcrypt
-motor
-jinja2
+
+# ===================================
+# GOOGLE CALENDAR & MEET INTEGRATION
+# ===================================
+google-auth-oauthlib>=1.0.0
+google-api-python-client>=2.100.0
+google-auth>=2.23.0

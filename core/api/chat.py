@@ -1,11 +1,13 @@
 """
-Chat API routes
+Chat API routes with guardrails integration
 """
 from typing import Dict
 from fastapi import APIRouter, Request, Depends, HTTPException
 
 from models.models import ChatMessage, UserResponse
 from core.auth.dependencies import require_auth
+from core.guardrails import get_guardrails_validator
+from core.config import Config
 
 router = APIRouter(prefix="/api")
 
@@ -32,25 +34,49 @@ async def chat_endpoint(
     message_data: ChatMessage,
     current_user: Dict = Depends(require_auth)
 ):
-    """Chat endpoint with authentication"""
+    """Chat endpoint with authentication and guardrails"""
     if not message_data.session_id:
         raise HTTPException(status_code=400, detail="Session ID required")
-    
+
+    # API-level input validation (defense in depth)
+    if Config.ENABLE_GUARDRAILS:
+        validator = get_guardrails_validator()
+        is_valid, error_msg, metadata = validator.validate_input(
+            message_data.message,
+            user_id=str(current_user["_id"])
+        )
+
+        if not is_valid:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Input validation failed: {error_msg}"
+            )
+
+        # Log warnings if any
+        if metadata.get("warnings"):
+            print(f"⚠️  API Guardrails warnings: {metadata['warnings']}")
+
     # Verify session belongs to user
     db = request.app.state.db
-    session = await db.get_session_by_id(message_data.session_id, str(current_user["_id"]))
+    session = await db.get_session_by_id(
+        message_data.session_id,
+        str(current_user["_id"])
+    )
     if not session:
         raise HTTPException(status_code=403, detail="Session not accessible")
-    
+
     try:
-        # Process with multi-agent manager
+        # Process with multi-agent manager (workflow has its own guardrails)
         result = await request.app.state.multi_agent_manager.process_message(
             message_data.message,
             str(current_user["_id"]),
             message_data.session_id
         )
-        
+
         return result
-        
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Chat processing failed: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Chat processing failed: {str(e)}"
+        )

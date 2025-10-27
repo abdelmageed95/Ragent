@@ -23,7 +23,9 @@ class EnhancedWorkflowState:
         self.agent_response: str = kwargs.get('agent_response', '')
         self.metadata: Dict[str, Any] = kwargs.get('metadata', {})
         self.tools_used: List[str] = kwargs.get('tools_used', [])
-        self.wikipedia_results: List[Dict[str, Any]] = kwargs.get('wikipedia_results', [])
+        self.wikipedia_results: List[Dict[str, Any]] = kwargs.get(
+            'wikipedia_results', []
+        )
 
         # Progress tracking
         self.current_step: str = kwargs.get('current_step', '')
@@ -57,6 +59,8 @@ class UserResponse(BaseModel):
 class SessionCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = Field(None, max_length=500)
+    session_type: str = Field(default="ai", pattern="^(ai|rag)$")  # "ai" or "rag"
+    rag_mode: Optional[str] = Field(default="unified_kb", pattern="^(specific_files|unified_kb)$")  # Only for RAG sessions
 
 
 class SessionUpdate(BaseModel):
@@ -68,6 +72,7 @@ class SessionResponse(BaseModel):
     id: str
     name: str
     description: Optional[str]
+    session_type: str  # "ai" or "rag"
     created_at: datetime
     last_active: datetime
     message_count: int

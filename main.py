@@ -27,13 +27,14 @@ from core.api.sessions import router as sessions_router
 from core.api.chat import router as chat_router
 from core.api.health import router as health_router
 from core.api.knowledge_base import router as kb_router
+from core.api.calendar import router as calendar_router
 
 # Graph system import
 try:
-    from graph.workflow import create_enhanced_langgraph_system
-    print("✅ Enhanced LangGraph system imported successfully")
+    from graph.workflow import create_langgraph_system
+    print("✅ LangGraph system imported successfully")
 except ImportError as e:
-    print(f"❌ Failed to import enhanced LangGraph system: {e}")
+    print(f"❌ Failed to import LangGraph system: {e}")
     exit(1)
 
 
@@ -87,6 +88,7 @@ app.include_router(sessions_router)
 app.include_router(chat_router)
 app.include_router(health_router)
 app.include_router(kb_router)
+app.include_router(calendar_router)
 
 
 # ===============================
@@ -109,17 +111,38 @@ async def dashboard_page(request: Request, current_user = Depends(get_current_us
         return RedirectResponse(url="/login", status_code=302)
     
     try:
+        print(f"🔵 Loading dashboard for user: {current_user.get('username', 'unknown')}")
         db = request.app.state.db
         sessions = await db.get_user_sessions(str(current_user["_id"]))
-        
-        return templates.TemplateResponse("dashboard.html", {
+        print(f"🔵 Found {len(sessions)} sessions")
+
+        # Convert sessions to JSON-serializable format
+        sessions_serializable = []
+        for session in sessions:
+            created_at = session.get("created_at")
+            session_dict = {
+                "_id": str(session.get("_id")),
+                "name": session.get("name"),
+                "description": session.get("description"),
+                "session_type": session.get("session_type", "ai"),
+                "created_at": created_at.isoformat() if created_at else None,
+                "user_id": str(session.get("user_id"))
+            }
+            sessions_serializable.append(session_dict)
+
+        response = templates.TemplateResponse("dashboard.html", {
             "request": request,
-            "user": current_user,
-            "sessions": sessions,
+            "current_user": current_user,
+            "sessions": sessions_serializable,
             "now": datetime.now
         })
-    except:
+        print("✅ Template rendered successfully!")
+        return response
+    except Exception as e:
         # Fallback if template not found
+        print(f"❌ Dashboard template error: {e}")
+        import traceback
+        traceback.print_exc()
         return HTMLResponse(content=get_dashboard_html(current_user))
 
 
