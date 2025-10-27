@@ -74,7 +74,7 @@ venv.bak/
 *.sqlite3
 # secret settings
 config/settings_local.py
-tokens.json
+token.json
 client_secrets_*.json
 credentials.json
 server.log

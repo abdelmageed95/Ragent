@@ -1,369 +1,782 @@
-# Agentic RAG - Multi-Agent AI System
+# Agentic RAG System
 
-A sophisticated multi-agent AI system built with FastAPI, LangGraph, and MongoDB that provides intelligent document analysis, retrieval-augmented generation (RAG), and conversational AI capabilities with user authentication and session management.
+A production-ready, multi-agent conversational AI system that combines Retrieval-Augmented Generation (RAG) with intelligent agents, memory management, and tool integration.
 
-## 🚀 Features
+![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-green.svg)
+![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-orange.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-### Core Capabilities
-- **Multi-Agent Architecture**: Intelligent routing between specialized AI agents (RAG, Chatbot, Memory)
-- **Document Processing**: Advanced PDF processing with text and image extraction
-- **RAG System**: Multimodal retrieval-augmented generation with FAISS indexing
-- **Real-time Streaming**: WebSocket-based real-time responses with progress tracking
-- **Memory Management**: Persistent conversation memory with MongoDB storage
-- **User Authentication**: Secure JWT-based authentication with session management
+---
 
-### System Components
+## Table of Contents
 
-#### Authentication & User Management
-- User registration and login with secure password hashing (bcrypt)
-- JWT token-based authentication with configurable expiration
-- Session management with MongoDB persistence
-- Multi-user support with isolated data
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Project Structure](#project-structure)
+- [Components](#components)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [API Documentation](#api-documentation)
+- [Advanced Features](#advanced-features)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
 
-#### Multi-Agent Workflow
-- **Supervisor Agent**: Intelligent routing based on user intent and chat mode
-- **RAG Agent**: Document retrieval and analysis using FAISS vector search
-- **Chatbot Agent**: General conversation with Wikipedia integration
-- **Memory Agent**: Context-aware conversation history management
+---
 
-#### Document Processing
-- **Smart Page Analysis**: PyMuPDF-based detection of images, charts, and tables
-- **Selective Processing**: Text-only pages → text extraction, visual pages → image conversion
-- **PDF text extraction and chunking**: Optimized for text-only pages (500-word chunks, 50-word overlap)
-- **Image extraction from PDFs**: Targeted conversion of visual content pages only
-- **Multimodal embedding generation**: Specialized Cohere embeddings per content type
-- **Dual FAISS indexing**: Separate optimized indices for text and visual content
+##  Overview
 
-## 📊 System Architecture
+This project implements a sophisticated **multi-agent conversational AI system** that intelligently routes between two specialized agents:
 
-The system uses a LangGraph-based workflow for intelligent agent routing:
+1. **Agentic AI (Chatbot)** - General-purpose conversational agent with access to external tools
+2. **Agentic RAG** - Document-based question answering using retrieval-augmented generation
 
+The system features:
+-  **Persistent memory** across conversations
+-  **Input/output guardrails** for content safety
+-  **Tool integration** (calculator, web search, Google Calendar, Wikipedia)
+-  **Dual knowledge base modes** (unified KB vs session-specific)
+-  **Real-time WebSocket communication**
+-  **Duplicate document detection** using SHA256 content hashing
+-  **Progress tracking** for all long-running operations
+
+---
+
+##  Key Features
+
+### Multi-Agent System
+- **Session-based routing** between RAG and Chatbot agents
+- **LangGraph workflow** for complex agent orchestration
+- **Memory integration** for context-aware conversations
+- **Guardrails** to prevent harmful inputs/outputs
+
+### RAG Capabilities
+- **Two KB modes**:
+  - **Unified KB**: Shared knowledge base across all sessions
+  - **Specific Files**: Session-isolated document collections
+- **Content-based duplicate detection** (SHA256 hashing)
+- **Multi-file upload** with real-time progress tracking
+- **Local embeddings** using Sentence Transformers (no API costs)
+- **ChromaDB** for vector storage
+
+### Agentic AI Capabilities
+- **External tools**: Calculator, datetime, web search, Wikipedia, Google Calendar
+- **Human-in-the-loop** (HITL) for Google Calendar event creation
+- **Tool execution tracking** and error handling
+- **Context-aware** responses using conversation memory
+
+### User Interface
+- **Modern responsive design** with professional UI/UX
+- **Real-time chat** using WebSocket connections
+- **Session management** dashboard
+- **Progress indicators** for file uploads and processing
+- **Mobile-friendly** design
+
+### Security & Safety
+- **JWT authentication** with secure token management
+- **Input guardrails** using NeMo Guardrails
+- **Output validation** to prevent harmful responses
+- **Session isolation** for data privacy
+
+---
+
+##  System Architecture
+
+### High-Level Architecture
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        UI[Web UI<br/>HTML/CSS/JS]
+        WS[WebSocket Client]
+    end
+
+    subgraph "API Layer"
+        FastAPI[FastAPI Server<br/>main.py]
+        Auth[Authentication<br/>JWT/OAuth]
+        API[REST API<br/>Endpoints]
+    end
+
+    subgraph "Workflow Layer"
+        LG[LangGraph<br/>Multi-Agent System]
+        Router[Session Router<br/>RAG vs AI]
+    end
+
+    subgraph "Agent Layer"
+        IG[Input Guardrails<br/>Safety Check]
+        MF[Memory Fetch<br/>Context Retrieval]
+        RAG[RAG Agent<br/>Document QA]
+        Chat[Chatbot Agent<br/>Tool Integration]
+        MU[Memory Update<br/>Save Context]
+        OG[Output Guardrails<br/>Safety Check]
+    end
+
+    subgraph "Data Layer"
+        Mongo[(MongoDB<br/>Users & Sessions)]
+        Chroma[(ChromaDB<br/>Vector Store)]
+        Files[File Storage<br/>PDF Documents]
+    end
+
+    subgraph "External Services"
+        OpenAI[OpenAI API<br/>GPT-4]
+        Google[Google Calendar<br/>Events]
+        Serper[Serper API<br/>Web Search]
+        Wiki[Wikipedia<br/>Knowledge]
+    end
+
+    UI --> WS
+    WS <--> FastAPI
+    UI --> API
+    API --> Auth
+    FastAPI --> LG
+
+    LG --> Router
+    Router --> IG
+    IG --> MF
+    MF --> RAG
+    MF --> Chat
+    RAG --> MU
+    Chat --> MU
+    MU --> OG
+    OG --> FastAPI
+
+    RAG <--> Chroma
+    Chat --> OpenAI
+    Chat --> Google
+    Chat --> Serper
+    Chat --> Wiki
+
+    FastAPI <--> Mongo
+    RAG <--> Files
+
+    style UI fill:#e1f5ff
+    style FastAPI fill:#fff4e1
+    style LG fill:#f0e1ff
+    style Mongo fill:#e8f8f5
+    style Chroma fill:#e8f8f5
 ```
-                    ┌────────────┐
-                    │   START    │
-                    └────┬───────┘
-                         │
-                         ▼
-                    ┌──────────────┐
-                    │ memory_fetch │
-                    └────┬─────────┘
-                         │
-                         ▼
-                    ┌────────────┐
-                    │ supervisor │
-                    └────┬───────┘
-                         │
-               ┌────────▼────────┐
-               │  route_to_agent │
-               └────┬──────┬─────┘
-                    ▼      ▼
-               ┌───────┐ ┌────────┐
-               │chatbot│ │rag_agent│
-               └──┬────┘ └────┬───┘
-                    ▼      ▼
-               ┌────────────────┐
-               │ memory_update  │
-               └──────┬─────────┘
-                      ▼
-                    ┌────┐
-                    │ END│
-                    └────┘
+
+### LangGraph Workflow
+
+```mermaid
+graph TD
+    START([Start]) --> IG{Input<br/>Guardrails<br/>Enabled?}
+
+    IG -->|Yes| IGN[Input Validation<br/>NeMo Guardrails]
+    IG -->|No| MF
+
+    IGN -->|Safe| MF[Memory Fetch<br/>Get Context]
+    IGN -->|Unsafe| OGN
+
+    MF --> Router{Session<br/>Type?}
+
+    Router -->|RAG| RAG[RAG Agent<br/>Document QA]
+    Router -->|AI| Chat[Chatbot Agent<br/>Tool Execution]
+
+    RAG --> MU[Memory Update<br/>Save Context]
+    Chat --> MU
+
+    MU --> OG{Output<br/>Guardrails<br/>Enabled?}
+
+    OG -->|Yes| OGN[Output Validation<br/>Safety Check]
+    OG -->|No| END
+
+    OGN --> END([End])
+
+    style START fill:#90EE90
+    style END fill:#FFB6C1
+    style IGN fill:#FFE4B5
+    style MF fill:#E0BBE4
+    style RAG fill:#87CEEB
+    style Chat fill:#87CEEB
+    style MU fill:#E0BBE4
+    style OGN fill:#FFE4B5
 ```
 
-**Workflow Steps:**
-1. **Memory Fetch**: Retrieve conversation context and history
-2. **Supervisor**: Analyze user intent and determine appropriate agent
-3. **Route to Agent**: Direct to either Chatbot or RAG Agent
-4. **Agent Processing**: Generate response based on specialization
-5. **Memory Update**: Store conversation and context for future reference
+### Data Flow - RAG Session
 
-## 🛠️ Technology Stack
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI
+    participant API
+    participant Workflow
+    participant Memory
+    participant RAG
+    participant ChromaDB
+    participant GPT4
 
-### Backend
-- **FastAPI**: High-performance web framework
-- **LangGraph**: Agent workflow orchestration
-- **MongoDB**: Document database with Motor async driver
-- **FAISS**: Vector similarity search
-- **OpenAI**: LLM integration
-- **Google Gemini**: Alternative LLM provider
-- **Cohere**: Additional embedding support
+    User->>UI: Upload PDF
+    UI->>API: POST /api/kb/upload
+    API->>API: Calculate SHA256 hash
+    API->>ChromaDB: Check for duplicates
+    alt Duplicate Found
+        ChromaDB-->>API: Hash exists
+        API-->>UI: Skip (duplicate)
+    else New Document
+        ChromaDB-->>API: Hash not found
+        API->>API: Extract text & chunk
+        API->>API: Generate embeddings
+        API->>ChromaDB: Store chunks
+        ChromaDB-->>API: Success
+        API-->>UI: Upload complete
+    end
 
-### Frontend
-- **Jinja2 Templates**: Server-side rendering
-- **WebSocket**: Real-time communication
-- **JWT Authentication**: Secure session management
+    User->>UI: Ask question
+    UI->>API: WebSocket message
+    API->>Workflow: Route to RAG
+    Workflow->>Memory: Fetch context
+    Memory-->>Workflow: Previous conversation
+    Workflow->>RAG: Process with context
+    RAG->>ChromaDB: Query similar chunks
+    ChromaDB-->>RAG: Relevant documents
+    RAG->>GPT4: Generate answer
+    GPT4-->>RAG: Response
+    RAG-->>Workflow: Answer + metadata
+    Workflow->>Memory: Update context
+    Workflow-->>API: Final response
+    API-->>UI: Display answer
+```
 
-### AI/ML Libraries
-- **LangChain**: LLM application framework
-- **PyMuPDF**: Advanced PDF analysis and content detection
-- **FAISS**: High-performance vector similarity search
-- **Cohere**: Multimodal embedding generation
-- **Qdrant**: Vector database support
-- **PaddleOCR**: Optical character recognition
-- **PIL**: Image processing
+### Data Flow - AI Session with Tools
 
-## 📁 Project Structure
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI
+    participant API
+    participant Workflow
+    participant Memory
+    participant Chatbot
+    participant Tools
+    participant GPT4
+    participant Google
+
+    User->>UI: "Schedule meeting tomorrow"
+    UI->>API: WebSocket message
+    API->>Workflow: Route to Chatbot
+    Workflow->>Memory: Fetch context
+    Memory-->>Workflow: History
+    Workflow->>Chatbot: Process request
+    Chatbot->>GPT4: Determine tool needed
+    GPT4-->>Chatbot: Use calendar_tool
+    Chatbot->>Tools: calendar_tool.run()
+    Tools->>UI: Request confirmation (HITL)
+    UI-->>User: Show event details
+    User->>UI: Approve
+    UI-->>Tools: Confirmed
+    Tools->>Google: Create event
+    Google-->>Tools: Success + event link
+    Tools-->>Chatbot: Event created
+    Chatbot-->>Workflow: Final response
+    Workflow->>Memory: Update history
+    Workflow-->>API: Response
+    API-->>UI: "Meeting scheduled!"
+```
+
+---
+
+##  Project Structure
 
 ```
 agentic-rag/
-├── main.py                 # Lightweight FastAPI application entry point
-├── core/                   # Core modular components
-│   ├── config.py          # Application configuration
-│   ├── auth/              # Authentication module
-│   │   ├── jwt_handler.py # JWT token management
-│   │   ├── dependencies.py # FastAPI auth dependencies
-│   │   └── utils.py       # Password hashing utilities
-│   ├── database/          # Database operations
-│   │   └── manager.py     # MongoDB database manager
-│   ├── api/               # API route modules
-│   │   ├── auth.py        # Authentication routes
-│   │   ├── sessions.py    # Session management routes
-│   │   ├── chat.py        # Chat endpoints
-│   │   └── health.py      # Health check endpoint
-│   ├── websocket/         # WebSocket handling
-│   │   ├── manager.py     # Multi-agent WebSocket manager
-│   │   └── handler.py     # WebSocket connection handling
-│   └── templates/         # Template utilities
-│       └── fallbacks.py   # Fallback HTML templates
-├── models/
-│   └── models.py          # Pydantic models and state definitions
-├── graph/                 # LangGraph workflow system
-│   ├── workflow.py        # LangGraph workflow implementation
-│   ├── supervisor.py      # Agent routing logic
-│   ├── rag_node.py       # RAG agent implementation
-│   ├── chat_node.py      # Chatbot agent implementation
-│   └── memory_nodes.py   # Memory management nodes
-├── rag_agent/             # Intelligent RAG system components
-│   ├── ragagent.py       # RAG system implementation with selective retrieval
-│   ├── embedding_helpers.py # Cohere embedding utilities for text/image
-│   ├── loading_helpers.py   # FAISS index and metadata loading utilities  
-│   └── build_kb.py       # Smart knowledge base building with page analysis
-├── memory/                # Memory management
-│   ├── mem_agent.py      # Memory agent implementation
-│   └── mem_config.py     # Memory configuration
-├── tools/                 # External tools integration
-│   └── wikipedia_tool.py # Wikipedia search tool
-├── utils/                 # Utility functions
-│   └── track_progress.py # Progress tracking utilities
-├── templates/            # HTML templates
-├── static/              # Static assets (CSS, JS)
-├── data/                # Processed documents and indices
-├── pdfs/                # Source PDF documents
-└── img/                 # System screenshots
+│
+├── core/                      # Core application components
+│   ├── api/                   # REST API endpoints
+│   │   ├── auth.py           # Authentication endpoints
+│   │   ├── knowledge_base.py # KB upload & management
+│   │   └── sessions.py       # Session management
+│   ├── auth/                  # Authentication logic
+│   │   ├── jwt_handler.py    # JWT token management
+│   │   └── oauth.py          # Google OAuth integration
+│   ├── cache/                 # Redis caching layer
+│   ├── database/              # MongoDB integration
+│   │   └── manager.py        # Database operations
+│   ├── llm/                   # LLM configuration
+│   │   └── openai_client.py  # OpenAI client setup
+│   ├── vector_store/          # ChromaDB integration
+│   │   └── chroma_client.py  # Vector store operations
+│   ├── websocket/             # WebSocket handling
+│   │   └── handler.py        # Real-time messaging
+│   ├── templates/             # Jinja2 templates
+│   └── config.py             # Configuration management
+│
+├── graph/                     # LangGraph multi-agent workflow
+│   ├── workflow.py           # Main workflow orchestration
+│   ├── rag_node.py           # RAG agent node
+│   ├── chat_node.py          # Chatbot agent node
+│   ├── memory_nodes.py       # Memory fetch/update nodes
+│   ├── guardrails_nodes.py   # Safety guardrails nodes
+│   ├── calendar_node.py      # Calendar integration node
+│   └── README.md             # Workflow documentation
+│
+├── memory/                    # Memory management system
+│   ├── mem_agent.py          # Memory agent implementation
+│   ├── mem_config.py         # Memory configuration
+│   └── README.md             # Memory documentation
+│
+├── rag_agent/                 # RAG implementation
+│   ├── ragagent_simple.py    # Simple RAG agent
+│   ├── build_kb_simple.py    # KB building with deduplication
+│   ├── pdf_extractor.py      # PDF text extraction
+│   ├── embedding_helpers.py  # Embedding generation
+│   └── local_embeddings.py   # Local Sentence Transformers
+│
+├── tools/                     # Agent tools
+│   ├── calculator_tool.py    # Mathematical calculations
+│   ├── datetime_tool.py      # Date/time operations
+│   ├── google_calendar_tool.py # Calendar management (HITL)
+│   ├── serper_tool.py        # Web search
+│   └── wikipedia_tool.py     # Wikipedia queries
+│
+├── models/                    # Pydantic data models
+│   └── models.py             # Request/response schemas
+│
+├── templates/                 # HTML templates
+│   ├── dashboard.html        # Session management UI
+│   ├── chat.html             # Chat interface
+│   ├── login.html            # Authentication page
+│   └── register.html         # Registration page
+│
+├── static/                    # Static assets
+│   ├── css/                  # Stylesheets
+│   ├── js/                   # JavaScript files
+│   └── img/                  # Images
+│
+├── data/                      # Application data
+│   ├── chroma_db/            # ChromaDB storage
+│   └── uploads/              # Uploaded PDF files
+│
+├── test_scripts/              # Testing utilities
+│   ├── test_integration.py   # Integration tests
+│   ├── test_memory_workflow.py # Memory tests
+│   ├── test_guardrails.py    # Guardrails tests
+│   └── test_simple_rag.py    # RAG tests
+│
+├── utils/                     # Utility functions
+│   └── track_progress.py     # Progress tracking
+│
+├── docs/                      # Detailed documentation
+│   ├── AGENTIC_RAG.md        # RAG system docs
+│   ├── AGENTIC_AI.md         # Chatbot agent docs
+│   ├── MEMORY.md             # Memory system docs
+│   ├── TOOLS.md              # Tools documentation
+│   └── GUARDRAILS.md         # Guardrails docs
+│
+├── main.py                    # FastAPI application entry point
+├── requirements.txt           # Python dependencies
+├── .env.example              # Environment variables template
+└── README.md                 # This file
 ```
 
-### New Modular Architecture Benefits
+---
 
-- **Separation of Concerns**: Each module has a specific responsibility
-- **Maintainable Code**: Easy to locate and modify functionality
-- **Testability**: Individual components can be tested in isolation
-- **Scalability**: Components can be easily extended or replaced
-- **Professional Structure**: Industry-standard project organization
+##  Components
 
-## 🔧 Installation & Setup
+### 1. **Agentic RAG** ([Details](docs/AGENTIC_RAG.md))
+Document-based question answering with two knowledge base modes:
+- **Unified KB**: Shared across all sessions
+- **Specific Files**: Session-isolated documents
+- Features: Duplicate detection, multi-file upload, progress tracking
+
+### 2. **Agentic AI** ([Details](docs/AGENTIC_AI.md))
+Conversational agent with tool integration:
+- **Tools**: Calculator, datetime, web search, Wikipedia, Google Calendar
+- **HITL**: Human-in-the-loop for calendar events
+- **Context-aware**: Uses memory for personalized responses
+
+### 3. **Memory System** ([Details](docs/MEMORY.md))
+Persistent conversation memory:
+- **ChromaDB-based** storage
+- **Semantic search** for relevant context
+- **Automatic summarization** for long conversations
+
+### 4. **Tools** ([Details](docs/TOOLS.md))
+Integrated external capabilities:
+- **Calculator**: Mathematical computations
+- **Datetime**: Date/time operations
+- **Google Calendar**: Event management with HITL
+- **Serper**: Web search
+- **Wikipedia**: Knowledge retrieval
+
+### 5. **Guardrails** ([Details](docs/GUARDRAILS.md))
+Safety and content moderation:
+- **Input validation**: Prevent harmful queries
+- **Output filtering**: Ensure safe responses
+- **NeMo Guardrails** integration
+
+---
+
+##  Installation
 
 ### Prerequisites
+
 - Python 3.12+
-- MongoDB (local or cloud instance)
+- MongoDB 4.4+
 - OpenAI API key
-- Google Gemini API key (optional)
+- (Optional) Google Cloud credentials for Calendar integration
+- (Optional) Serper API key for web search
 
-### Installation Steps
+### Step 1: Clone the Repository
 
-1. **Clone the repository**
 ```bash
-git clone <repository-url>
+git clone https://github.com/your-username/agentic-rag.git
 cd agentic-rag
 ```
 
-2. **Create virtual environment**
+### Step 2: Create Virtual Environment
+
 ```bash
 python -m venv .ragenv
-source .ragenv/bin/activate  # Linux/Mac
-# or
-.ragenv\Scripts\activate     # Windows
+source .ragenv/bin/activate  # On Windows: .ragenv\Scripts\activate
 ```
 
-3. **Install dependencies**
+### Step 3: Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Environment Configuration**
-Create a `.env` file with the following variables:
+### Step 4: Set Up Environment Variables
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and configure:
+
 ```env
-OPENAI_API_KEY=your_openai_api_key
-MONGODB_URL=mongodb://localhost:27017
-JWT_SECRET=your_jwt_secret_key
-GOOGLE_API_KEY=your_google_api_key  # Optional
-COHERE_API_KEY=your_cohere_api_key  # Optional
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4-turbo-preview
+
+# MongoDB Configuration
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB_NAME=agentic_rag
+
+# JWT Configuration
+JWT_SECRET_KEY=your_super_secret_jwt_key_here
+JWT_ALGORITHM=HS256
+JWT_EXPIRATION_HOURS=24
+
+# Google OAuth (Optional)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Serper API (Optional)
+SERPER_API_KEY=your_serper_api_key
+
+# Application Configuration
+ENABLE_GUARDRAILS=true
+LOG_LEVEL=INFO
 ```
 
-5. **Database Setup**
-Ensure MongoDB is running and accessible at the configured URL.
+### Step 5: Initialize Database
 
-6. **Document Processing (Optional)**
-Place PDF documents in the `pdfs/` directory and run the intelligent document processing pipeline. The system will automatically analyze each page for content type and process through the appropriate modality (text-only vs visual content).
+MongoDB will automatically create collections on first use. No manual setup required.
 
-## 📷 Screenshots
+### Step 6: Run the Application
 
-### User Authentication
-![Login Interface](img/login.png)
-
-*Clean and professional login interface with email/password authentication*
-
-![Registration Page](img/register.png)
-*User registration form with username, email, and optional full name fields*
-
-### Dashboard & Session Management
-![User Dashboard](img/sessiona.png)
-*Main dashboard showing user statistics, session management, and AI capabilities overview*
-
-### Interactive Chat Interface
-![Chat Interface](img/chat.png)
-*Real-time chat interface with multi-agent workflow tracking, progress indicators, and response streaming*
-
-### Key UI Features Shown:
-- **Secure Authentication**: JWT-based login with professional UI design
-- **Session Management**: Create, manage, and switch between different chat sessions
-- **Real-time Workflow**: Live progress tracking showing which agent is processing
-- **Multi-Agent Indicators**: Visual feedback on RAG vs Chatbot agent selection
-- **Responsive Design**: Clean, modern interface with intuitive navigation
-- **Activity Tracking**: User statistics and session metrics display
-
-## 🚀 Running the Application
-
-### Development Mode
 ```bash
-python main.py
-```
-The application will start at `http://localhost:8080`
-
-### Production Mode
-```bash
-uvicorn main:app --host 0.0.0.0 --port 8080 --workers 4
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## 💻 Usage
+Access the application at: `http://localhost:8000`
 
-### User Interface
+---
 
-### 1. Registration & Login
-- Navigate to the application URL
-- Create a new account or login with existing credentials
-- JWT tokens are automatically managed via HTTP-only cookies
-
-### 2. Session Management
-- Create new chat sessions from the dashboard
-- Each session maintains independent conversation history
-- Sessions can be renamed, deleted, or archived
-
-### 3. Multi-Modal Interactions
-- **General Chat**: Ask questions, get Wikipedia-enhanced responses
-- **Document Search**: Query uploaded PDFs and images
-- **My Resources**: Access personal document collections
-
-### 4. Real-Time Features
-- Live response streaming during agent processing
-- Workflow status updates showing current processing step
-- Progress indicators for long-running operations
-
-## 🔌 API Endpoints
-
-### Authentication
-- `POST /register` - User registration
-- `POST /login` - User login
-- `POST /logout` - User logout
-
-### Session Management
-- `GET /api/sessions` - List user sessions
-- `POST /api/sessions` - Create new session
-- `PUT /api/sessions/{id}` - Update session
-- `DELETE /api/sessions/{id}` - Delete session
-
-### Chat
-- `POST /api/chat` - Send chat message
-- `WS /ws/{session_id}` - WebSocket connection for real-time chat
-
-### System
-- `GET /health` - System health check
-- `GET /api/me` - Current user information
-
-## 🧪 System Features
-
-### Multi-Agent Intelligence
-The system automatically routes user queries to the most appropriate agent:
-- **Document queries** → RAG Agent (searches PDFs, images)
-- **General questions** → Chatbot Agent (Wikipedia-enhanced responses)
-- **Context-dependent** → Memory-aware routing
-
-### Advanced RAG Capabilities
-- **Intelligent Page Analysis**: Automatic detection of images, charts, and tables
-- **Selective Processing**: Text-only pages → text pipeline, visual pages → image pipeline
-- **Zero Redundancy**: Each page processed through exactly one optimized modality
-- **Multimodal document processing**: Specialized handling for text + images
-- **Semantic similarity search**: Dual FAISS indices with modality-specific optimization
-- **Context-aware response generation**: Enhanced with page-type metadata
-- **Source citation and evidence linking**: Tracks processing modality and page numbers
-
-### Memory & Persistence
-- Conversation history stored in MongoDB
-- Cross-session memory continuity
-- User-specific data isolation
-- Automatic context summarization
-
-## 📈 Monitoring & Logging
-
-The application includes comprehensive logging:
-- Authentication events
-- Agent routing decisions
-- Processing performance metrics
-- Error tracking and debugging
-
-Console output provides real-time insights into system operation with emoji-coded status messages.
-
-## 🔐 Security Features
-
-- **Password Security**: bcrypt hashing with salt
-- **JWT Authentication**: Secure token-based sessions
-- **HTTP-Only Cookies**: XSS protection
-- **CORS Configuration**: Controlled cross-origin access
-- **Input Validation**: Pydantic model validation
-- **Database Security**: Parameterized queries, injection protection
-
-## 🚧 Development
-
-### Adding New Agents
-1. Create agent implementation in `graph/`
-2. Add routing logic to supervisor
-3. Update workflow in `workflow.py`
-4. Test integration with existing memory system
-
-### Extending Document Support
-1. Add new processors in `rag_agent/`
-2. Update embedding generation
-3. Extend FAISS indexing
-4. Test multimodal retrieval
-
-## 📝 Configuration
+##  Configuration
 
 ### Environment Variables
-- `OPENAI_API_KEY`: Required for LLM functionality
-- `MONGODB_URL`: Database connection string
-- `JWT_SECRET`: Authentication secret key
-- `ENVIRONMENT`: Set to "production" for production mode
-- `ALLOWED_ORIGINS`: CORS allowed origins (production)
 
-### System Defaults
-- Session expiration: 7 days
-- JWT algorithm: HS256
-- Default port: 8080
-- MongoDB database: "agentic_memory"
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `OPENAI_API_KEY` | OpenAI API key | - | Yes |
+| `OPENAI_MODEL` | GPT model to use | `gpt-4-turbo-preview` | No |
+| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017` | Yes |
+| `MONGO_DB_NAME` | Database name | `agentic_rag` | No |
+| `JWT_SECRET_KEY` | JWT signing key | - | Yes |
+| `ENABLE_GUARDRAILS` | Enable safety guardrails | `true` | No |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | - | No |
+| `SERPER_API_KEY` | Serper API key | - | No |
 
-## 🤝 Contributing
+### RAG Configuration
+
+Edit `rag_agent/build_kb_simple.py`:
+
+```python
+chunk_size = 500        # Words per chunk
+chunk_overlap = 50      # Overlapping words
+```
+
+### Memory Configuration
+
+Edit `memory/mem_config.py`:
+
+```python
+MAX_MEMORY_SIZE = 10    # Maximum stored messages
+SIMILARITY_THRESHOLD = 0.7  # Minimum similarity score
+```
+
+---
+
+## Usage
+
+### 1. Register/Login
+
+Navigate to `http://localhost:8000` and create an account or login.
+
+### 2. Create a Session
+
+Choose between:
+- **Agentic AI**: General conversation with tool access
+- **Agentic RAG**: Document-based Q&A
+
+For RAG sessions, select knowledge base mode:
+- **Unified KB**: Access shared documents
+- **Specific Files**: Isolated document collection
+
+### 3. Upload Documents (RAG Only)
+
+1. Click "Upload File to KB"
+2. Select PDF file(s)
+3. Watch progress bar for upload/processing status
+4. Duplicate files are automatically detected and skipped
+
+### 4. Start Chatting
+
+**RAG Example:**
+```
+You: What are the key findings in the research paper?
+AI: Based on the document, the key findings are...
+```
+
+**AI Example:**
+```
+You: What's 15% of 2500?
+AI: [Using calculator] 15% of 2500 is 375.
+
+You: Schedule a meeting for tomorrow at 2pm
+AI: [Shows event details for confirmation]
+You: [Approves]
+AI: Meeting scheduled! [Google Calendar link]
+```
+
+---
+
+##  API Documentation
+
+### Authentication
+
+**Register User**
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "secure_password"
+}
+```
+
+**Login**
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "secure_password"
+}
+
+Response: { "access_token": "jwt_token", "token_type": "bearer" }
+```
+
+### Sessions
+
+**Create Session**
+```http
+POST /api/sessions
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Research Session",
+  "description": "Analyzing research papers",
+  "session_type": "rag",
+  "rag_mode": "unified_kb"
+}
+```
+
+**Get Sessions**
+```http
+GET /api/sessions
+Authorization: Bearer <token>
+```
+
+### Knowledge Base
+
+**Upload Documents**
+```http
+POST /api/kb/upload
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+files: [file1.pdf, file2.pdf]
+session_id: "session_id_here"
+```
+
+**Check Upload Status**
+```http
+GET /api/kb/status/{task_id}
+Authorization: Bearer <token>
+
+Response: {
+  "status": "processing",
+  "progress": 75,
+  "message": "Generating embeddings...",
+  "files_processed": 1,
+  "total_files": 2
+}
+```
+
+### WebSocket
+
+**Connect**
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws');
+ws.onopen = () => {
+  ws.send(JSON.stringify({
+    type: 'auth',
+    token: 'jwt_token',
+    session_id: 'session_id'
+  }));
+};
+```
+
+**Send Message**
+```javascript
+ws.send(JSON.stringify({
+  type: 'message',
+  content: 'What is the main topic of the document?'
+}));
+```
+
+---
+
+##  Advanced Features
+
+### Duplicate Detection
+
+Prevents uploading the same document multiple times:
+- Uses **SHA256 content hashing** (not filename)
+- Detects duplicates even if file is renamed
+- Shows clear messages: "All 2 file(s) already exist in knowledge base"
+
+### Progress Tracking
+
+Real-time feedback for long operations:
+- File upload: 5% → 10%
+- Text extraction: 30%
+- Embedding generation: 70%
+- Finalization: 90% → 100%
+
+### Human-in-the-Loop (HITL)
+
+Google Calendar tool requires user confirmation:
+1. AI proposes event details
+2. User reviews and approves/rejects
+3. Event is created only after approval
+
+### Session Isolation
+
+RAG "Specific Files" mode:
+- Each session has isolated ChromaDB collection: `session_{session_id}`
+- Documents are not shared between sessions
+- Perfect for confidential documents
+
+---
+
+##  Testing
+
+### Run All Tests
+
+```bash
+python -m pytest test_scripts/
+```
+
+### Individual Tests
+
+**Memory System:**
+```bash
+python test_scripts/test_memory_workflow.py
+```
+
+**RAG Agent:**
+```bash
+python test_scripts/test_simple_rag.py
+```
+
+**Guardrails:**
+```bash
+python test_scripts/test_guardrails.py
+```
+
+**Integration:**
+```bash
+python test_scripts/test_integration.py
+```
+
+---
+
+##  Contributing
+
+We welcome contributions! Please:
 
 1. Fork the repository
-2. Create a feature branch
-3. Implement changes with tests
-4. Submit pull request with detailed description
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
 
+---
+
+##  License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+## Further Reading
+
+- [Agentic RAG Deep Dive](READMEs/AGENTIC_RAG.md)
+- [Agentic AI Architecture](READMEs/AGENTIC_AI.md)
+- [Memory System Details](READMEs/MEMORY.md)
+- [Tools Integration Guide](READMEs/TOOLS.md)
+- [Guardrails Configuration](READMEs/GUARDRAILS.md)
+
+---
+
+##  Acknowledgments
+
+- **LangChain & LangGraph** - Multi-agent orchestration
+- **OpenAI** - GPT-4 language model
+- **ChromaDB** - Vector storage
+- **FastAPI** - Web framework
+- **MongoDB** - Database
+- **NeMo Guardrails** - Content safety
+
+---
+
+##  Support
+
+For issues, questions, or suggestions:
+- Open an [Issue](https://github.com/abdelmageed95/agentic-rag/issues)
+- Join our [Discussions](https://github.com/abdelmageed95/agentic-rag/discussions)
+
+---
+
+**Built with using LangGraph, FastAPI, MongoDB, and ChromaDB**
