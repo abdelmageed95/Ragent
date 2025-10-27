@@ -492,16 +492,16 @@ Access the application at: `http://localhost:8000`
 
 ### Environment Variables
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `OPENAI_API_KEY` | OpenAI API key | - | Yes |
-| `OPENAI_MODEL` | GPT model to use | `gpt-4-turbo-preview` | No |
-| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017` | Yes |
-| `MONGO_DB_NAME` | Database name | `agentic_rag` | No |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OPENAI_API_KEY` | OpenAI API key | - |
+| `OPENAI_MODEL` | GPT model to use | `gpt-4o-mini` | 
+| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017` |
+| `MONGO_DB_NAME` | Database name | `agentic_rag` |
 | `JWT_SECRET_KEY` | JWT signing key | - | Yes |
-| `ENABLE_GUARDRAILS` | Enable safety guardrails | `true` | No |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID | - | No |
-| `SERPER_API_KEY` | Serper API key | - | No |
+| `ENABLE_GUARDRAILS` | Enable safety guardrails | `true` |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | - |
+| `SERPER_API_KEY` | Serper API key | - |
 
 ### RAG Configuration
 
