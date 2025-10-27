@@ -72,6 +72,12 @@ venv.bak/
 *.db
 *.sqlite
 *.sqlite3
+# secret settings
+config/settings_local.py
+tokens.json
+client_secrets_*.json
+credentials.json
+server.log
 
 # Vector store data
 chroma-data/
