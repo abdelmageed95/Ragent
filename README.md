@@ -77,7 +77,7 @@ The system features:
 
 ### Security & Safety
 - **JWT authentication** with secure token management
-- **Input guardrails** using NeMo Guardrails
+- **Input guardrails** using custom guardrails system
 - **Output validation** to prevent harmful responses
 - **Session isolation** for data privacy
 
@@ -165,7 +165,7 @@ graph TB
 graph TD
     START([Start]) --> IG{Input<br/>Guardrails<br/>Enabled?}
 
-    IG -->|Yes| IGN[Input Validation<br/>NeMo Guardrails]
+    IG -->|Yes| IGN[Input Validation<br/> Guardrails]
     IG -->|No| MF
 
     IGN -->|Safe| MF[Memory Fetch<br/>Get Context]
@@ -406,7 +406,7 @@ Integrated external capabilities:
 Safety and content moderation:
 - **Input validation**: Prevent harmful queries
 - **Output filtering**: Ensure safe responses
-- **NeMo Guardrails** integration
+- **Guardrails** integration
 
 ---
 
@@ -767,7 +767,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **ChromaDB** - Vector storage
 - **FastAPI** - Web framework
 - **MongoDB** - Database
-- **NeMo Guardrails** - Content safety
+- **Guardrails** - Content safety
 
 ---
 

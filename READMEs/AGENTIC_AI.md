@@ -4,7 +4,7 @@ Comprehensive documentation for the Chatbot Agent with tool integration, human-i
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Overview](#overview)
 - [Architecture](#architecture)
@@ -20,28 +20,28 @@ Comprehensive documentation for the Chatbot Agent with tool integration, human-i
 
 ---
 
-## 🌟 Overview
+##  Overview
 
 The Agentic AI system is a **general-purpose conversational agent** powered by GPT-4 with access to external tools for enhanced capabilities. It can:
 
-- 🧮 **Perform calculations** and unit conversions
-- 🔍 **Search the web** for current information
-- 📅 **Manage calendar events** with human approval
-- 📚 **Query Wikipedia** for factual knowledge
-- 🕐 **Handle date/time operations** and timezone conversions
-- 💬 **Maintain conversation context** using persistent memory
+-  **Perform calculations** and unit conversions
+-  **Search the web** for current information
+-  **Manage calendar events** with human approval
+-  **Query Wikipedia** for factual knowledge
+-  **Handle date/time operations** and timezone conversions
+-  **Maintain conversation context** using persistent memory
 
 ### Key Features
 
-✅ **Multi-tool orchestration** - Intelligently selects and chains tools
-✅ **Human-in-the-loop** - Requires confirmation for sensitive actions
-✅ **Memory integration** - Context-aware across conversation turns
-✅ **Error recovery** - Graceful handling of tool failures
-✅ **Real-time streaming** - Progressive response generation
+- **Multi-tool orchestration** - Intelligently selects and chains tools
+- **Human-in-the-loop** - Requires confirmation for sensitive actions
+-  **Memory integration** - Context-aware across conversation turns
+-  **Error recovery** - Graceful handling of tool failures
+-  **Real-time streaming** - Progressive response generation
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Component Diagram
 
@@ -157,7 +157,7 @@ sequenceDiagram
 
 ---
 
-## 🛠️ Tool Integration
+##  Tool Integration
 
 ### Tool Architecture
 
@@ -248,7 +248,7 @@ graph TD
 
 ---
 
-## 👤 Human-in-the-Loop (HITL)
+##  Human-in-the-Loop (HITL)
 
 ### Workflow
 
@@ -353,7 +353,7 @@ CONFIRMATION_TIMEOUT = 60    # Seconds to wait for user response
 
 ---
 
-## 💬 Conversation Flow
+##  Conversation Flow
 
 ### Message Processing
 
@@ -445,7 +445,7 @@ Agent: [Uses calendar_tool + memory]
 
 ---
 
-## 🔧 Available Tools
+##  Available Tools
 
 ### 1. Calculator Tool
 
@@ -587,7 +587,7 @@ create_calendar_event(
 
 ---
 
-## ⚙️ Tool Execution
+##  Tool Execution
 
 ### Execution Pipeline
 
@@ -676,7 +676,7 @@ async def execute_tool(tool_call):
 
 ---
 
-## 🧠 Context Management
+##  Context Management
 
 ### Memory Integration
 
@@ -718,7 +718,7 @@ await memory_update_node({
 
 ---
 
-## 📊 Performance Metrics
+##  Performance Metrics
 
 ### Response Times
 
@@ -787,7 +787,7 @@ Available tools:
 
 ---
 
-## 📚 Best Practices
+##  Best Practices
 
 ### 1. Tool Selection
 
@@ -827,19 +827,19 @@ Available tools:
 ### 4. HITL Usage
 
 **Require confirmation for:**
-- ✅ Calendar event creation
-- ✅ Email sending (if implemented)
-- ✅ File deletion (if implemented)
-- ✅ Financial transactions (if implemented)
+-  Calendar event creation
+-  Email sending (if implemented)
+-  File deletion (if implemented)
+-  Financial transactions (if implemented)
 
 **Don't require for:**
-- ❌ Information retrieval (search, Wikipedia)
-- ❌ Calculations
-- ❌ Date/time queries
+-  Information retrieval (search, Wikipedia)
+-  Calculations
+-  Date/time queries
 
 ---
 
-## 🔗 Further Reading
+##  Further Reading
 
 - [Main README](../README.md)
 - [Agentic RAG](AGENTIC_RAG.md)

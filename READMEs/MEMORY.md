@@ -4,7 +4,7 @@ Comprehensive documentation for the intelligent memory management system with sh
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Overview](#overview)
 - [Architecture](#architecture)
@@ -19,28 +19,28 @@ Comprehensive documentation for the intelligent memory management system with sh
 
 ---
 
-## 🌟 Overview
+##  Overview
 
 The Memory System provides **persistent conversation context** across multiple sessions, enabling agents to:
 
-- 📝 **Remember conversation history** for context-aware responses
-- 🧠 **Extract and store user facts** (preferences, information)
-- 🔍 **Retrieve relevant context** using semantic search
-- 💾 **Persist across sessions** for long-term continuity
-- ⚡ **Fast retrieval** with hybrid storage (in-memory + database)
+-  **Remember conversation history** for context-aware responses
+-  **Extract and store user facts** (preferences, information)
+-  **Retrieve relevant context** using semantic search
+-  **Persist across sessions** for long-term continuity
+-  **Fast retrieval** with hybrid storage (in-memory + database)
 
 ### Key Features
 
-✅ **Three-tier architecture** - Short-term, long-term, structured facts
-✅ **Semantic search** - ChromaDB vector storage for similarity matching
-✅ **Automatic fact extraction** - GPT-4 identifies important information
-✅ **Scalable storage** - MongoDB for structured data, ChromaDB for embeddings
-✅ **Zero cost embeddings** - Local Sentence Transformers (no API fees)
-✅ **Session isolation** - Per-user, per-thread memory management
+- **Three-tier architecture** - Short-term, long-term, structured facts
+- **Semantic search** - ChromaDB vector storage for similarity matching
+- **Automatic fact extraction** - GPT-4 identifies important information
+- **Scalable storage** - MongoDB for structured data, ChromaDB for embeddings
+- **Zero cost embeddings** - Local Sentence Transformers (no API fees)
+- **Session isolation** - Per-user, per-thread memory management
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Three-Tier Memory System
 
@@ -135,7 +135,7 @@ sequenceDiagram
 
 ---
 
-## 🗄️ Memory Types
+##  Memory Types
 
 ### 1. Short-Term Memory
 
@@ -253,7 +253,7 @@ Extracted Facts:
 
 ---
 
-## 🔄 Memory Operations
+##  Memory Operations
 
 ### Memory Fetch
 
@@ -404,7 +404,7 @@ async def update_memory(user_message: str, agent_response: str):
 
 ---
 
-## 🧠 Fact Extraction
+##  Fact Extraction
 
 ### Extraction Process
 
@@ -483,7 +483,7 @@ Assistant: "Thanks for sharing! I'll keep that in mind. What ML frameworks do yo
 
 ---
 
-## 💾 Storage Backends
+##  Storage Backends
 
 ### MongoDB Collections
 
@@ -555,7 +555,7 @@ results = collection.query(
 
 ---
 
-## ⚙️ Configuration
+##  Configuration
 
 ### Memory Config
 
@@ -589,7 +589,7 @@ class MemoryConfig:
 
 ---
 
-## 📡 API Reference
+##  API Reference
 
 ### MemoryAgent Class
 
@@ -641,7 +641,7 @@ async def update_memory(user_msg: str, assistant_msg: str):
 
 ---
 
-## 📚 Best Practices
+##  Best Practices
 
 ### 1. Memory Window Sizing
 
@@ -723,7 +723,7 @@ conversations_col.delete_many({
 
 ---
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Issue: Memory not persisting
 
@@ -771,7 +771,7 @@ print(result)  # Should show {"name": "John", "occupation": "developer"}
 
 ---
 
-## 📈 Performance
+##  Performance
 
 ### Benchmarks
 
@@ -789,7 +789,7 @@ print(result)  # Should show {"name": "John", "occupation": "developer"}
 
 ---
 
-## 🔗 Further Reading
+##  Further Reading
 
 - [Main README](../README.md)
 - [Agentic RAG](AGENTIC_RAG.md)

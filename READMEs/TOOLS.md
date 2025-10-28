@@ -4,7 +4,7 @@ Comprehensive documentation for all integrated tools that extend the agent's cap
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Overview](#overview)
 - [Tool Architecture](#tool-architecture)
@@ -20,28 +20,28 @@ Comprehensive documentation for all integrated tools that extend the agent's cap
 
 ---
 
-## 🌟 Overview
+##  Overview
 
 The Tools system provides **external capabilities** to the AI agents, enabling them to perform actions beyond text generation:
 
-- 🧮 **Mathematical calculations** and unit conversions
-- 📅 **Calendar management** with event creation/retrieval
-- 🔍 **Web search** for current information
-- 📚 **Wikipedia queries** for factual knowledge
-- 🕐 **Date/time operations** and timezone handling
+-  **Mathematical calculations** and unit conversions
+-  **Calendar management** with event creation/retrieval
+-  **Web search** for current information
+-  **Wikipedia queries** for factual knowledge
+-  **Date/time operations** and timezone handling
 
 ### Key Features
 
-✅ **LangChain integration** - Standard @tool decorator
-✅ **Type-safe** - Pydantic schema validation
-✅ **Error handling** - Graceful degradation on failures
-✅ **Human-in-the-loop** - Confirmation for sensitive actions
-✅ **Async support** - Non-blocking tool execution
-✅ **Observable** - Tool usage tracking and logging
+- **LangChain integration** - Standard @tool decorator
+- **Type-safe** - Pydantic schema validation
+- **Error handling** - Graceful degradation on failures
+- **Human-in-the-loop** - Confirmation for sensitive actions
+- **Async support** - Non-blocking tool execution
+- **Observable** - Tool usage tracking and logging
 
 ---
 
-## 🏗️ Tool Architecture
+##  Tool Architecture
 
 ### Component Diagram
 
@@ -148,7 +148,7 @@ sequenceDiagram
 
 ---
 
-## 🧮 Calculator Tool
+##  Calculator Tool
 
 **File:** `tools/calculator_tool.py`
 
@@ -305,7 +305,7 @@ def calculate(expression: str) -> str:
 
 ---
 
-## 📅 DateTime Tool
+##  DateTime Tool
 
 **File:** `tools/datetime_tool.py`
 
@@ -418,7 +418,7 @@ time_until_date("2025-01-01")  # → "64 days"
 
 ---
 
-## 📆 Google Calendar Tool
+##  Google Calendar Tool
 
 **File:** `tools/google_calendar_tool.py`
 
@@ -601,7 +601,7 @@ async def create_calendar_event(
 
 ---
 
-## 🔍 Web Search Tool
+##  Web Search Tool
 
 **File:** `tools/serper_tool.py`
 
@@ -675,7 +675,7 @@ News search results for "climate change policy":
 
 ---
 
-## 📚 Wikipedia Tool
+##  Wikipedia Tool
 
 **File:** `tools/wikipedia_tool.py`
 
@@ -729,7 +729,7 @@ Source: https://en.wikipedia.org/wiki/Python_(programming_language)
 
 ---
 
-## 🛠️ Creating Custom Tools
+##  Creating Custom Tools
 
 ### Tool Template
 
@@ -798,7 +798,7 @@ all_chatbot_tools = [
 
 ---
 
-## 🔗 Further Reading
+##  Further Reading
 
 - [Main README](../README.md)
 - [Agentic RAG](AGENTIC_RAG.md)

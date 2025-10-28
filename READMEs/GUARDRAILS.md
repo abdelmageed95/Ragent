@@ -4,7 +4,7 @@ Comprehensive documentation for the guardrails system that ensures safe, secure,
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Overview](#overview)
 - [Architecture](#architecture)
@@ -18,28 +18,33 @@ Comprehensive documentation for the guardrails system that ensures safe, secure,
 
 ---
 
-## 🌟 Overview
+##  Overview
 
 The Guardrails system provides **multi-layered protection** for AI interactions, preventing:
 
-- 🛡️ **Harmful content** - Toxic, hateful, or dangerous inputs/outputs
-- 💉 **Injection attacks** - Prompt injection, SQL injection, XSS attempts
-- 🔒 **Data leakage** - PII exposure and sensitive information disclosure
-- ⚠️ **Malicious use** - System abuse and rate limit violations
-- 📏 **Input/output boundaries** - Length limits and token constraints
+-  **Harmful content** - Toxic, hateful, or dangerous inputs/outputs
+-  **Injection attacks** - Prompt injection, SQL injection, XSS attempts
+-  **Data leakage** - PII exposure and sensitive information disclosure
+-  **Malicious use** - System abuse and rate limit violations
+-  **Input/output boundaries** - Length limits and token constraints
 
 ### Key Features
 
-✅ **Input validation** - Pre-processing checks before agent sees message
-✅ **Output sanitization** - Post-processing cleanup before user sees response
-✅ **PII detection** - Automatic redaction of personal information
-✅ **Injection prevention** - Block prompt injection and code injection attempts
-✅ **Rate limiting** - Prevent abuse and DoS attacks
+✅ **Input validation** - Pre-processing checks before agent sees message.
+
+✅ **Output sanitization** - Post-processing cleanup before user sees response.
+
+✅ **PII detection** - Automatic redaction of personal information.
+
+✅ **Injection prevention** - Block prompt injection and code injection attempts.
+
+✅ **Rate limiting** - Prevent abuse and DoS attacks.
+
 ✅ **Configurable rules** - Customize thresholds and behaviors
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Guardrails Flow
 
@@ -108,7 +113,7 @@ sequenceDiagram
 
 ---
 
-## 🔍 Input Validation
+##  Input Validation
 
 ### Validation Checks
 
@@ -304,7 +309,7 @@ Response to User:
 
 ---
 
-## 🧹 Output Sanitization
+##  Output Sanitization
 
 ### Sanitization Steps
 
@@ -453,7 +458,7 @@ Metadata:
 
 ---
 
-## 🔒 Security Checks
+##  Security Checks
 
 ### Injection Detection Patterns
 
@@ -575,7 +580,7 @@ def redact_pii(text: str) -> tuple[str, list]:
 
 ---
 
-## ⚙️ Configuration
+##  Configuration
 
 ### Guardrails Config
 
@@ -632,7 +637,7 @@ ENABLE_HARMFUL_CONTENT_DETECTION=true
 
 ---
 
-## 🔗 Integration
+##  Integration
 
 ### LangGraph Workflow
 
@@ -677,7 +682,7 @@ else:
 
 ---
 
-## 📊 Monitoring
+## Monitoring
 
 ### Guardrails Report
 
@@ -731,7 +736,7 @@ if pii_detected:
 
 ---
 
-## 📚 Best Practices
+##  Best Practices
 
 ### 1. Balance Security vs Usability
 
@@ -802,7 +807,7 @@ if rejections_per_hour > threshold:
 
 ---
 
-## 🔗 Further Reading
+##  Further Reading
 
 - [Main README](../README.md)
 - [Agentic RAG](AGENTIC_RAG.md)
@@ -812,4 +817,4 @@ if rejections_per_hour > threshold:
 
 ---
 
-**Powered by NeMo Guardrails and Custom Security Layers**
+**Powered by Custom Guardrails System and Security Layers**

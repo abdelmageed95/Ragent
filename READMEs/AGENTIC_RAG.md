@@ -4,7 +4,7 @@ Comprehensive documentation for the Retrieval-Augmented Generation (RAG) system 
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Overview](#overview)
 - [Architecture](#architecture)
@@ -20,7 +20,7 @@ Comprehensive documentation for the Retrieval-Augmented Generation (RAG) system 
 
 ---
 
-## 🌟 Overview
+##  Overview
 
 The Agentic RAG system enables users to have intelligent conversations with their documents. It combines:
 
@@ -33,16 +33,16 @@ The Agentic RAG system enables users to have intelligent conversations with thei
 
 ### Key Features
 
-✅ **Multi-file upload** with progress tracking
-✅ **Automatic duplicate detection** (content-based, not filename)
-✅ **Session isolation** for confidential documents
-✅ **Semantic search** using vector embeddings
-✅ **Source attribution** in answers
-✅ **Memory integration** for multi-turn conversations
+-  **Multi-file upload** with progress tracking
+-  **Automatic duplicate detection** (content-based, not filename)
+- **Session isolation** for confidential documents
+- **Semantic search** using vector embeddings
+- **Source attribution** in answers
+- **Memory integration** for multi-turn conversations
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### Component Diagram
 
@@ -174,7 +174,7 @@ sequenceDiagram
 
 ---
 
-## 🗂️ Knowledge Base Modes
+##  Knowledge Base Modes
 
 ### 1. Unified KB (Shared Knowledge Base)
 
@@ -229,7 +229,7 @@ collection_name = f"session_{session_id}"
 
 ---
 
-## 📄 Document Processing Pipeline
+##  Document Processing Pipeline
 
 ### Stage 1: File Upload
 
@@ -406,7 +406,7 @@ collection.add(
 
 ---
 
-## 🔍 Duplicate Detection
+##  Duplicate Detection
 
 ### How It Works
 
@@ -450,22 +450,22 @@ graph TD
 
 **Scenario 1: All New Files**
 ```
-✅ Knowledge base updated! Added 3 new document(s).
+ Knowledge base updated! Added 3 new document(s).
 ```
 
 **Scenario 2: Mixed**
 ```
-✅ Knowledge base updated! Added 2 new document(s), 1 duplicate(s) skipped.
+ Knowledge base updated! Added 2 new document(s), 1 duplicate(s) skipped.
 ```
 
 **Scenario 3: All Duplicates**
 ```
-✅ All 2 file(s) already exist in knowledge base. No new documents added.
+ All 2 file(s) already exist in knowledge base. No new documents added.
 ```
 
 ---
 
-## 🤖 RAG Agent
+##  RAG Agent
 
 ### Query Processing
 
@@ -590,7 +590,7 @@ Sources: research_paper.pdf
 
 ---
 
-## 💾 Vector Storage
+##  Vector Storage
 
 ### ChromaDB Configuration
 
@@ -731,7 +731,7 @@ Authorization: Bearer <jwt_token>
 
 ---
 
-## ⚙️ Configuration
+##  Configuration
 
 ### Chunking Parameters
 
@@ -788,7 +788,7 @@ MIN_SIMILARITY = 0.3    # Minimum similarity score (0-1)
 
 ---
 
-## ⚡ Performance
+##  Performance
 
 ### Benchmarks
 
@@ -827,7 +827,7 @@ MIN_SIMILARITY = 0.3    # Minimum similarity score (0-1)
 
 ---
 
-## 📚 Best Practices
+##  Best Practices
 
 ### 1. Document Organization
 
@@ -895,7 +895,7 @@ python scripts/rebuild_kb.py
 
 ---
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Issue: No results found
 
@@ -930,7 +930,7 @@ python scripts/rebuild_kb.py
 
 ---
 
-## 📖 Further Reading
+##  Further Reading
 
 - [Main README](../README.md)
 - [Agentic AI Documentation](AGENTIC_AI.md)
