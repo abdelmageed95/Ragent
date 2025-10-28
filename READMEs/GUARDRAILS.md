@@ -345,7 +345,7 @@ Response to User:
 graph TD
     Response[Agent Response] --> Truncate{Length > Max?}
 
-    Truncate -->|Yes| Cut[Truncate + Add "..."]
+    Truncate -->|Yes| Cut[Truncate + Add ...]
     Truncate -->|No| HTMLCheck
 
     Cut --> HTMLCheck{Contains<br/>HTML/Scripts?}

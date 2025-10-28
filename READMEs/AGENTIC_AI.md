@@ -171,7 +171,7 @@ graph LR
     end
 
     subgraph "LangChain Tool"
-        LC[LangChain<br/>@tool decorator]
+        LC[LangChain<br/>Tool Decorator]
     end
 
     subgraph "Execution"
