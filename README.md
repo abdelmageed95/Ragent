@@ -376,25 +376,25 @@ agentic-rag/
 
 ##  Components
 
-### 1. **Agentic RAG** ([Details](docs/AGENTIC_RAG.md))
+### 1. **Agentic RAG** ([Details](READMEs/AGENTIC_RAG.md))
 Document-based question answering with two knowledge base modes:
 - **Unified KB**: Shared across all sessions
 - **Specific Files**: Session-isolated documents
 - Features: Duplicate detection, multi-file upload, progress tracking
 
-### 2. **Agentic AI** ([Details](docs/AGENTIC_AI.md))
+### 2. **Agentic AI** ([Details](READMEs/AGENTIC_AI.md))
 Conversational agent with tool integration:
 - **Tools**: Calculator, datetime, web search, Wikipedia, Google Calendar
 - **HITL**: Human-in-the-loop for calendar events
 - **Context-aware**: Uses memory for personalized responses
 
-### 3. **Memory System** ([Details](docs/MEMORY.md))
+### 3. **Memory System** ([Details](READMEs/MEMORY.md))
 Persistent conversation memory:
 - **ChromaDB-based** storage
 - **Semantic search** for relevant context
 - **Automatic summarization** for long conversations
 
-### 4. **Tools** ([Details](docs/TOOLS.md))
+### 4. **Tools** ([Details](READMEs/TOOLS.md))
 Integrated external capabilities:
 - **Calculator**: Mathematical computations
 - **Datetime**: Date/time operations
@@ -402,7 +402,7 @@ Integrated external capabilities:
 - **Serper**: Web search
 - **Wikipedia**: Knowledge retrieval
 
-### 5. **Guardrails** ([Details](docs/GUARDRAILS.md))
+### 5. **Guardrails** ([Details](READMEs/GUARDRAILS.md))
 Safety and content moderation:
 - **Input validation**: Prevent harmful queries
 - **Output filtering**: Ensure safe responses
