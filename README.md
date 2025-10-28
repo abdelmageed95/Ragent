@@ -1,4 +1,4 @@
-# Agentic RAG System
+# Ragent 
 
 A production-ready, multi-agent conversational AI system that combines Retrieval-Augmented Generation (RAG) with intelligent agents, memory management, and tool integration.
 
