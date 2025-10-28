@@ -346,22 +346,22 @@ graph TD
     Response[Agent Response] --> Truncate{Length > Max?}
 
     Truncate -->|Yes| Cut[Truncate + Add "..."]
-    Truncate -->|No| HTML
+    Truncate -->|No| HTMLCheck
 
-    Cut --> HTML{Contains<br/>HTML/Scripts?}
+    Cut --> HTMLCheck{Contains<br/>HTML/Scripts?}
 
-    HTML -->|Yes| Strip[Strip Tags]
-    HTML -->|No| PII
+    HTMLCheck -->|Yes| Strip[Strip Tags]
+    HTMLCheck -->|No| PIICheck
 
-    Strip --> PII{Contains<br/>PII?}
+    Strip --> PIICheck{Contains<br/>PII?}
 
-    PII -->|Yes| Redact[Redact PII]
-    PII -->|No| Injection
+    PIICheck -->|Yes| Redact[Redact PII]
+    PIICheck -->|No| InjectionCheck
 
-    Redact --> Injection{Contains<br/>Injections?}
+    Redact --> InjectionCheck{Contains<br/>Injections?}
 
-    Injection -->|Yes| Clean[Remove Injections]
-    Injection -->|No| Safe
+    InjectionCheck -->|Yes| Clean[Remove Injections]
+    InjectionCheck -->|No| Safe
 
     Clean --> Safe[Safe Response]
     Safe --> Return([Return to User])

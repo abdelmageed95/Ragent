@@ -177,7 +177,7 @@ graph LR
     subgraph "Execution"
         Validate[Validate<br/>Parameters]
         Execute[Execute<br/>Logic]
-        Return[Return<br/>Result]
+        ReturnResult[Return<br/>Result]
     end
 
     Name --> LC
@@ -187,7 +187,7 @@ graph LR
 
     LC --> Validate
     Validate --> Execute
-    Execute --> Return
+    Execute --> ReturnResult[Return<br/>Result]
 
     style LC fill:#87CEEB
     style Validate fill:#FFE4B5
